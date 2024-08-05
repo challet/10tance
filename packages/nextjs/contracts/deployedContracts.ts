@@ -4,6 +4,39 @@
  */
 import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
-const deployedContracts = {} as const;
+const deployedContracts = {
+  31337: {
+    TenTance: {
+      address: "0x8a791620dd6260079bf849dc5567adc3f2fdc318",
+      abi: [
+        {
+          type: "function",
+          name: "locate",
+          inputs: [
+            {
+              name: "addr",
+              type: "address",
+              internalType: "address",
+            },
+          ],
+          outputs: [
+            {
+              name: "lat",
+              type: "int80",
+              internalType: "int80",
+            },
+            {
+              name: "lng",
+              type: "int80",
+              internalType: "int80",
+            },
+          ],
+          stateMutability: "pure",
+        },
+      ],
+      inheritedFunctions: {},
+    },
+  },
+} as const;
 
 export default deployedContracts satisfies GenericContractsDeclaration;
