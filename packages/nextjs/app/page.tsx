@@ -2,10 +2,19 @@
 
 import { FunctionComponent, useState } from "react";
 import { EvmTorus } from "../utils/leaflet/evmWorld";
-import { LeafletEvent, latLng, latLngBounds } from "leaflet";
+import { Icon, LeafletEvent, latLng, latLngBounds } from "leaflet";
+import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
+import iconUrl from "leaflet/dist/images/marker-icon.png";
+import shadowUrl from "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/leaflet.css";
 import type { NextPage } from "next";
 import { MapContainer, Marker, ScaleControl, TileLayer, useMapEvent } from "react-leaflet";
+
+const icon = new Icon.Default({
+  iconUrl: iconUrl.src,
+  iconRetinaUrl: iconRetinaUrl.src,
+  shadowUrl: shadowUrl.src,
+});
 
 const MoveHandler: FunctionComponent<{ onMove: (event: LeafletEvent) => void }> = ({ onMove }) => {
   useMapEvent("move", onMove);
@@ -56,7 +65,7 @@ const Home: NextPage = () => {
             noWrap={false}
           />
           <ScaleControl />
-          <Marker position={[0, 0]} />
+          <Marker position={[0, 0]} icon={icon} />
           <MoveHandler onMove={onMove} />
         </MapContainer>
       </div>
