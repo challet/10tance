@@ -59,7 +59,7 @@ const Home: NextPage = () => {
           crs={EvmTorus}
           className="hero-content size-full"
         >
-          <TileLayer url="http://localhost:3001/{z}/{x}/{y}.png" noWrap={false} />
+          <TileLayer url="http://localhost:3001/tiles/{z}/{x}/{y}.png" noWrap={false} />
           <ScaleControl />
           <Marker position={[0, 0]} icon={icon} />
           <MoveHandler onMove={onMove} />
