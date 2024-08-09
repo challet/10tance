@@ -20,11 +20,12 @@ const routeFactory = async () => {
 
   return async (req: Request, res: Response) => {
     const data = await EVMObject.findAll();
-    res.json(data.map((d) => {
+    res.json(data.map((d:typeof EVMObject) => {
       return {
         id: d.id.toString('hex'),
-        latng: d.latlng
-      }
+        lat: d.latlng.y,
+        lng: d.latlng.x
+      };
     }));
   }
 

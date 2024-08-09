@@ -1,7 +1,15 @@
-import { Sequelize, DataTypes, Model } from 'sequelize';
+import { Sequelize, DataTypes, Model, InferAttributes, InferCreationAttributes } from 'sequelize';
+
+interface EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttributes<EVMObject>> {
+  id: string;
+  latlng: {
+    x: number;
+    y: number;
+  }
+}
 
 export default (db: Sequelize) => {
-  return db.define(
+  return db.define<EVMObject>(
     'EVMObject', {
       id: {
         type: DataTypes.BLOB,
