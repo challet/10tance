@@ -1,7 +1,6 @@
 import Jimp, { Font } from "jimp";
 import { Request, Response } from "express";
 
-
 const routeFactory = async () => {
   const font = await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK);
 
