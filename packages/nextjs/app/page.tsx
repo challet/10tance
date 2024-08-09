@@ -9,6 +9,7 @@ import shadowUrl from "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/leaflet.css";
 import type { NextPage } from "next";
 import { MapContainer, Marker, ScaleControl, TileLayer, useMapEvent } from "react-leaflet";
+import useSWR, { Fetcher } from "swr";
 
 const icon = new Icon.Default({
   iconUrl: iconUrl.src,
@@ -16,13 +17,26 @@ const icon = new Icon.Default({
   shadowUrl: shadowUrl.src,
 });
 
+interface EVMObject {
+  id: string;
+  lat: number;
+  lng: number;
+}
+
 const MoveHandler: FunctionComponent<{ onMove: (event: LeafletEvent) => void }> = ({ onMove }) => {
   useMapEvent("move", onMove);
   return null;
 };
 
+const dataFetch: Fetcher<EVMObject[], string> = async () => {
+  const response = await fetch("http://localhost:3001/objects");
+  const data = await response.json();
+  return data;
+};
+
 const Home: NextPage = () => {
   const [mapBounds, setMapBounds] = useState(latLngBounds(latLng(0, 0), latLng(0, 0)));
+  const { data, isLoading } = useSWR("dummy", dataFetch);
 
   const onMove = (event: LeafletEvent) => {
     setMapBounds(event.target.getBounds());
@@ -63,6 +77,11 @@ const Home: NextPage = () => {
           <ScaleControl />
           <Marker position={[0, 0]} icon={icon} />
           <MoveHandler onMove={onMove} />
+          {!isLoading &&
+            data &&
+            data.map(d => {
+              return <Marker position={[d.lat, d.lng]} icon={icon} key={d.id} />;
+            })}
         </MapContainer>
       </div>
     </>

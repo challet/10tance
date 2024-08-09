@@ -8,12 +8,12 @@ import { Bounds, CRS, LatLng, Point, Projection, Util, transformation } from "le
 export const MAX_SAFE_COORDINATES = Math.pow(2, 49); //  562949953421312
 export const MIN_SAFE_COORDINATES = -Math.pow(2, 49); // -562949953421312
 
-console.log(MAX_SAFE_COORDINATES, MIN_SAFE_COORDINATES);
-
 // The range of the world is 2^50 (-2^49 to 2^49)
 // The range of the tile is 256 (2^8)
-// So the scale factor of the whole world compressed into a tile is 2^8 / 2^50
-const BASE_SCALE = 1 / Math.pow(2, 46);
+// So one coordinate unit will match 1 pixel at zoom 42 (50 - 8)
+// And the scale factor for the whole world to be compressed into a tile is 1 / 2^42
+export const ISO_ZOOM = 42;
+const BASE_SCALE = 1 / Math.pow(2, ISO_ZOOM);
 
 export const EvmLonLat = Util.extend({}, Projection.LonLat, {
   // Coordinates from the EVM world are between -(2^79 - 1) and (2^79 - 1)
