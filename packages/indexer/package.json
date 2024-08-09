@@ -1,0 +1,21 @@
+{
+  "name": "@10tance/indexer",
+  "packageManager": "yarn@3.2.3",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "tsc",
+    "serve": "node dist/server.js",
+    "start": "tsx src/server.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.1.0",
+    "@types/pg": "^8",
+    "tsc": "^2.0.4",
+    "tslib": "^2.6.3",
+    "tsx": "^4.16.5",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "pg": "^8.12.0"
+  }
+}
