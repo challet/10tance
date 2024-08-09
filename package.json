@@ -26,7 +26,7 @@
     "next:lint": "yarn workspace @se-2/nextjs lint",
     "next:serve": "yarn workspace @se-2/nextjs serve",
     "next:start": "yarn workspace @se-2/nextjs dev",
-    "next:test": "yarn foundry:test",
+    "next:test": "yarn workspace @se-2/nextjs test",
     "next:vercel": "yarn workspace @se-2/nextjs vercel",
     "next:vercel:yolo": "yarn workspace @se-2/nextjs vercel:yolo",
     "tiles:start": "yarn workspace @10tance/tileserver start",
@@ -37,11 +37,15 @@
     "format": "yarn next:format && yarn foundry:format"
   },
   "devDependencies": {
+    "@types/cors": "^2",
     "husky": "~8.0.3",
     "lint-staged": "~13.2.2"
   },
   "packageManager": "yarn@3.2.3",
   "engines": {
     "node": ">=18.17.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.5"
   }
 }

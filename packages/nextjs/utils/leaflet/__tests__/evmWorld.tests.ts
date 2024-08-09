@@ -1,4 +1,4 @@
-import { EvmTorus, MAX_SAFE_COORDINATES, MIN_SAFE_COORDINATES } from "../evmWorld";
+import { EvmTorus, ISO_ZOOM, MAX_SAFE_COORDINATES, MIN_SAFE_COORDINATES } from "../evmWorld";
 import L from "leaflet";
 
 describe("EVM World", () => {
@@ -26,7 +26,7 @@ describe("EVM World", () => {
 
   it.each([
     [0, -128, 128], // at zoom 0 the whole world is shown on a 256 x 256 tile
-    [44, MIN_SAFE_COORDINATES, MAX_SAFE_COORDINATES],
+    [ISO_ZOOM, MIN_SAFE_COORDINATES, MAX_SAFE_COORDINATES],
   ])("Bounds the pixel coordinates at zoom %d between %d and %d", (zoom, min, max) => {
     expect(map.getPixelWorldBounds(zoom)).toEqual(
       expect.objectContaining({
