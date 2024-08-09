@@ -2,8 +2,6 @@
   "name": "@10tance/tileserver",
   "version": "0.1.0",
   "packageManager": "yarn@3.2.3",
-  "private": true,
-  "type": "module",
   "scripts": {
     "build": "tsc",
     "serve": "node dist/index.js",
