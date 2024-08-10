@@ -5,7 +5,9 @@ interface EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttri
   latlng: {
     x: number;
     y: number;
-  }
+  },
+  type: string,
+  meta: object
 }
 
 export default (db: Sequelize) => {
@@ -16,7 +18,8 @@ export default (db: Sequelize) => {
         primaryKey: true
       },
       latlng: Sequelize.GEOMETRY('POINT'),
-      type: DataTypes.ENUM('ZERO', 'ERC20')
+      type: DataTypes.ENUM('ZERO', 'ERC20'),
+      meta: DataTypes.JSONB
     }, {
       tableName: 'evm_addresses',
       timestamps: false

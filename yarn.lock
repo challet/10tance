@@ -5,6 +5,22 @@ __metadata:
   version: 6
   cacheKey: 8
 
+"@10tance/indexer@workspace:packages/indexer":
+  version: 0.0.0-use.local
+  resolution: "@10tance/indexer@workspace:packages/indexer"
+  dependencies:
+    "@types/node": ^22.1.0
+    "@types/pg": ^8
+    dotenv: ^16.4.5
+    pg: ^8.12.0
+    sequelize: ^6.37.3
+    tsc: ^2.0.4
+    tslib: ^2.6.3
+    tsx: ^4.16.5
+    typescript: ^5.5.4
+  languageName: unknown
+  linkType: soft
+
 "@10tance/tileserver@workspace:packages/tileserver":
   version: 0.0.0-use.local
   resolution: "@10tance/tileserver@workspace:packages/tileserver"
@@ -5658,6 +5674,17 @@ __metadata:
   checksum: d7b9913ff92cae20cb577a4ac6fcc121bd6223319e54a40f51a14740a681ad5c574fd29a57da478a5f234a6fa6c52cbf0b7c641353e03c648b1ae85ba670b977
   languageName: node
   linkType: hard
+
+"common@workspace:packages/common":
+  version: 0.0.0-use.local
+  resolution: "common@workspace:packages/common"
+  dependencies:
+    "@types/pg": ^8
+    dotenv: ^16.4.5
+    pg: ^8.12.0
+    sequelize: ^6.37.3
+  languageName: unknown
+  linkType: soft
 
 "concat-map@npm:0.0.1":
   version: 0.0.1

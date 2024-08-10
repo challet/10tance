@@ -1,25 +1,17 @@
-import { Sequelize } from 'sequelize';
 import { Request, Response } from "express";
-
-
-import initModel from './models/EVMObject';
-
+import initDb, { initModel } from '../../common/sequelize/index';
 
 const routeFactory = async () => {
-  const db = new Sequelize({
-    username: process.env.DB_USER,
-    password: process.env.DB_PWD,
-    host: 'localhost',
-    port: 5432,
-    dialect: 'postgres',
-    database: process.env.DB_NAME,
-  });
-  await db.authenticate();
+  console.log(initDb);
+  const db = await initDb();
 
   const EVMObject = initModel(db);
 
   return async (req: Request, res: Response) => {
-    const data = await EVMObject.findAll();
+    const data = await EVMObject.findAll({
+      order: [[db.literal("meta->'circulating_market_cap'"), 'DESC']],
+      limit: 50
+    });
     res.json(data.map((d:typeof EVMObject) => {
       return {
         id: d.id.toString('hex'),
