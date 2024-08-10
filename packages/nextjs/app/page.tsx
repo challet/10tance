@@ -2,26 +2,13 @@
 
 import { FunctionComponent, useLayoutEffect, useState } from "react";
 import { EvmTorus } from "../utils/leaflet/evmWorld";
-import { Icon, LatLngBounds } from "leaflet";
-import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
-import iconUrl from "leaflet/dist/images/marker-icon.png";
-import shadowUrl from "leaflet/dist/images/marker-shadow.png";
+import { LatLngBounds } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { NextPage } from "next";
 import { MapContainer, Marker, ScaleControl, TileLayer, useMap, useMapEvent } from "react-leaflet";
 import useSWR, { Fetcher } from "swr";
-
-const icon = new Icon.Default({
-  iconUrl: iconUrl.src,
-  iconRetinaUrl: iconRetinaUrl.src,
-  shadowUrl: shadowUrl.src,
-});
-
-interface EVMObject {
-  id: string;
-  lat: number;
-  lng: number;
-}
+import useErc20Icons from "~~/hooks/10tance/useErc20Icons";
+import type { EVMObject } from "~~/types/10tance/EVMObject";
 
 const Home: NextPage = () => {
   const [mapBounds, setMapBounds] = useState<LatLngBounds | null>(null);
@@ -74,7 +61,7 @@ const MoveHandler: FunctionComponent<{ onBoundsChange: (bounds: LatLngBounds) =>
   return null;
 };
 
-// TODO : better fetch by area batches
+// TODO : better fetch by area batches and throttle sequancial moves
 const dataFetch: Fetcher<EVMObject[], LatLngBounds> = async bounds => {
   const response = await fetch(`http://localhost:3001/objects?bounds=${bounds.toBBoxString()}`);
   const data = await response.json();
@@ -83,12 +70,13 @@ const dataFetch: Fetcher<EVMObject[], LatLngBounds> = async bounds => {
 
 const Markers: FunctionComponent<{ bounds: LatLngBounds }> = ({ bounds }) => {
   const map = useMap();
-  const { data, isLoading } = useSWR(EvmTorus.constraintsLatLngBounds(map.wrapLatLngBounds(bounds)), dataFetch);
+  const { data, isLoading } = useSWR(EvmTorus.constraintsLatLngBounds(map.wrapLatLngBounds(bounds)), dataFetch, {
+    fallbackData: [],
+  });
+  const icons = useErc20Icons(data);
 
   if (!isLoading && data) {
-    return data.map(d => {
-      return <Marker position={[d.lat, d.lng]} icon={icon} key={d.id} />;
-    });
+    return data.map(d => <Marker position={[d.lat, d.lng]} icon={icons[d.id]} key={d.id} />);
   } else {
     return null;
   }
