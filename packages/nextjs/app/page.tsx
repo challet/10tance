@@ -4,13 +4,14 @@ import { FormEvent, FunctionComponent, useCallback, useEffect, useLayoutEffect, 
 import Image from "next/image";
 import { EvmLonLat, EvmTorus, ISO_ZOOM } from "../utils/leaflet/evmWorld";
 import { LatLng, LatLngBounds, LeafletEvent } from "leaflet";
-import "leaflet/dist/leaflet.css";
+import defaultIcon from "../public/question-mark-circle.svg";
 import type { NextPage } from "next";
 import { LayersControl, MapContainer, Marker, ScaleControl, TileLayer, useMap, useMapEvent } from "react-leaflet";
 import useSWR, { Fetcher } from "swr";
 import CoordinatesLayer from "~~/components/leaflet/CoordinatesLayer";
 import useErc20Icons from "~~/hooks/10tance/useErc20Icons";
 import type { EVMObject } from "~~/types/10tance/EVMObject";
+import "leaflet/dist/leaflet.css";
 
 const intialCenter = new LatLng(0, 0);
 
@@ -112,7 +113,7 @@ const ObjectDetails: FunctionComponent<{ initialData: any }> = ({ initialData })
         <li className="content-center">
           <Image
             className="aspect-square size-20 p-0"
-            src={initialData.icon_url}
+            src={initialData.icon_url ?? defaultIcon.src}
             alt={initialData.name}
             width={80}
             height={80}
