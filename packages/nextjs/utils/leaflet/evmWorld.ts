@@ -65,8 +65,14 @@ export const EvmTorus: CRS & { constraintsLatLngBounds: (bounds: LatLngBounds) =
         return WORLD_BOUNDS;
       } else {
         return new LatLngBounds(
-          CRS.Simple.wrapLatLng.call(this, bounds.getNorthEast()),
-          CRS.Simple.wrapLatLng.call(this, bounds.getSouthWest()),
+          new LatLng(
+            Math.max(bounds.getNorth(), MAX_SAFE_COORDINATES),
+            Math.max(bounds.getEast(), MAX_SAFE_COORDINATES),
+          ),
+          new LatLng(
+            Math.min(bounds.getSouth(), MIN_SAFE_COORDINATES),
+            Math.min(bounds.getWest(), MIN_SAFE_COORDINATES),
+          ),
         );
       }
     },

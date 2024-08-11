@@ -1,4 +1,5 @@
 import { useState } from "react";
+import defaultIcon from "../../public/question-mark-circle.svg";
 import type { EVMObject } from "../../types/10tance/EVMObject.d.ts";
 import { Icon } from "leaflet";
 
@@ -10,7 +11,7 @@ export default function useErc20Icons(data: EVMObject[]): Record<string, Icon> {
     .map(d => [
       d.id,
       new Icon({
-        iconUrl: d.icon_url,
+        iconUrl: d.icon_url ?? defaultIcon.src,
         iconSize: [29, 29],
         iconAnchor: [15, 15],
       }),
