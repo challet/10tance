@@ -1,6 +1,7 @@
 "use client";
 
 import { FunctionComponent, useLayoutEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { EvmTorus } from "../utils/leaflet/evmWorld";
 import { LatLngBounds, LeafletEvent } from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -75,7 +76,13 @@ const ObjectDetails: FunctionComponent<{ initialData: any }> = ({ initialData })
     <>
       <ul className="bg-base-200 text-base-content min-h-full w-[30rem] p-4">
         <li className="content-center">
-          <img className="aspect-square size-24 p-0" src={initialData.icon_url} alt={initialData.name} />
+          <Image
+            className="aspect-square size-20 p-0"
+            src={initialData.icon_url}
+            alt={initialData.name}
+            width={80}
+            height={80}
+          />
         </li>
         <li>
           <h2 className="text-lg font-semibold">{initialData.name}</h2>
