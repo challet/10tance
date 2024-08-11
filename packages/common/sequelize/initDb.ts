@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize';
 
-export default async() => {
+export default async(): Promise<Sequelize> => {
   const db = new Sequelize({
     username: process.env.DB_USER,
     password: process.env.DB_PWD,
@@ -10,5 +10,6 @@ export default async() => {
     database: process.env.DB_NAME,
   });
   await db.authenticate();
+  await db.query("SET bytea_output = 'hex'");
   return db;
 };
