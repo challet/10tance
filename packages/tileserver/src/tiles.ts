@@ -11,7 +11,7 @@ const routeFactory = async () => {
       z: parseInt(req.params.z), 
     };
   
-    let image = new Jimp(256, 256, ((x + y) % 2) == 0 ? 'green' : 'red');
+    let image = new Jimp(256, 256, ((x + y) % 2) == 0 ? '#d7ffc9' : '#ffcbb9');
   
     image.print(font, 0, 0, `${x}\n${y}\n${z}`);
   
