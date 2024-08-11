@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import querystring from 'querystring';
 import { Sequelize } from 'sequelize';
-import initDb, { initModel } from '../../common/sequelize/index';
+import { initDb, initModel } from '../../common/sequelize/index';
 
 (async () => {
   const db = await initDb();
@@ -44,9 +44,10 @@ async function erc20Fetch(db:Sequelize, options: any): Promise<any> {
       latlng: db.fn('POINT', lng, lat),
       type: 'ERC20',
       meta: {
-        name: d.name,
+        name: d.symbol,
         icon_url: d.icon_url,
-        circulating_market_cap: d.circulating_market_cap
+        circulating_market_cap: parseFloat(d.circulating_market_cap),
+        holders: parseInt(d.holders)
       }
     };
   }));

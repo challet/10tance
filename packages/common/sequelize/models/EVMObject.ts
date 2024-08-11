@@ -1,14 +1,21 @@
 import { Sequelize, DataTypes, Model, InferAttributes, InferCreationAttributes } from 'sequelize';
 
 interface EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttributes<EVMObject>> {
-  id: string;
+  id: Buffer;
   latlng: {
     x: number;
     y: number;
   },
   type: string,
-  meta: object
+  meta: {
+    name?: string;
+    icon_url?: string,
+    circulating_market_cap?: number
+    holders: number
+  }
 }
+
+console.log(Buffer.isEncoding('hex'));
 
 export default (db: Sequelize) => {
   return db.define<EVMObject>(
@@ -17,7 +24,7 @@ export default (db: Sequelize) => {
         type: DataTypes.BLOB,
         primaryKey: true
       },
-      latlng: Sequelize.GEOMETRY('POINT'),
+      latlng: DataTypes.GEOMETRY('POINT'),
       type: DataTypes.ENUM('ZERO', 'ERC20'),
       meta: DataTypes.JSONB
     }, {
