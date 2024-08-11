@@ -40,10 +40,15 @@ describe("EVM World", () => {
     [0, 0, 0, 128, 128],
     [0, MAX_SAFE_COORDINATES, MAX_SAFE_COORDINATES, 256, 256],
     [0, MIN_SAFE_COORDINATES, MIN_SAFE_COORDINATES, 0, 0],
-    [10, 0, 0, Math.pow(2, 17), Math.pow(2, 17)], // 17 = 10 / 2 + log2(256)
+    [10, 0, 0, Math.pow(2, 17), Math.pow(2, 17)], // 17 = 10 / 2 + log2(256)s
   ])("Projects at zoom %s the coordinate (%s,%s) to the pixel (%s,%s). And unproject", (zoom, lat, lng, x, y) => {
     expect(map.project([lat, lng], zoom)).toEqual(expect.objectContaining({ x, y }));
     const bound = map.wrapLatLng([lat, lng]);
     expect(map.unproject([x, y], zoom)).toEqual(expect.objectContaining({ lat: bound.lat, lng: bound.lng }));
   });
+
+  /*
+  it.each([
+
+  ])("")*/
 });
