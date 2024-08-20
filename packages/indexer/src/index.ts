@@ -2,6 +2,7 @@ import 'dotenv/config';
 import querystring from 'querystring';
 import { Sequelize } from 'sequelize';
 import { initDb, initModel } from '../../common/sequelize/index';
+import computeLocation from '../../common/leaflet/EvmLocation';
 
 (async () => {
   const db = await initDb();
@@ -28,16 +29,12 @@ async function erc20Fetch(db:Sequelize, options: any): Promise<any> {
   const path = `api/v${options.version}/${options.endpoint}`;
   const query = querystring.stringify(options.params);
   const uri = `${host}/${path}?${query}`;
-  console.log(uri);
 
   const response = await fetch(uri);
   const data = await response.json();
-  console.log(data.items.length);
 
   await db.models.EVMObject.bulkCreate(data.items.map((d: any) => {
-    const addr = BigInt(d.address);
-    const lng = BigInt.asIntN(50, addr); // downscale the 80 bits to 50
-    const lat = BigInt.asIntN(50, addr >> BigInt(80)); // shift 80 and downscale to 50 
+    const [lat, lng] = computeLocation(d.address);
 
     return {
       id: d.address.replace('Ox', '\\x'),

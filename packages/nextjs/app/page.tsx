@@ -1,38 +1,63 @@
 "use client";
 
-import { FunctionComponent, useLayoutEffect, useMemo, useState } from "react";
+import { FormEvent, FunctionComponent, useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { EvmTorus } from "../utils/leaflet/evmWorld";
-import { LatLngBounds, LeafletEvent } from "leaflet";
+import { EvmLonLat, EvmTorus, ISO_ZOOM } from "../utils/leaflet/evmWorld";
+import { LatLng, LatLngBounds, LeafletEvent } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { NextPage } from "next";
-import { MapContainer, Marker, ScaleControl, TileLayer, useMap, useMapEvent } from "react-leaflet";
+import { LayersControl, MapContainer, Marker, ScaleControl, TileLayer, useMap, useMapEvent } from "react-leaflet";
 import useSWR, { Fetcher } from "swr";
+import CoordinatesLayer from "~~/components/leaflet/CoordinatesLayer";
 import useErc20Icons from "~~/hooks/10tance/useErc20Icons";
 import type { EVMObject } from "~~/types/10tance/EVMObject";
 
+const intialCenter = new LatLng(0, 0);
+
 const Home: NextPage = () => {
   const [mapBounds, setMapBounds] = useState<LatLngBounds | null>(null);
+
+  const [goingTo, goTo] = useState<LatLng>(intialCenter);
+  const handleGoToAction = useCallback((event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const target = event.target as typeof event.target & {
+      address: { value: string };
+    };
+    goTo(EvmLonLat.fromEvmAddress(target.address.value));
+  }, []);
+
   const [selectedObject, setSelectedObject] = useState<object | null>(null);
 
   return (
     <>
-      <div className="stats shadow">
-        <div className="stat">
+      <div className="stats shadow text-sm">
+        <div className="stat ">
           <div className="stat-title">West</div>
-          <div className="stat-value">{mapBounds ? mapBounds.getWest() : null}</div>
+          <div className="stat-value text-sm">{mapBounds ? mapBounds.getWest() : null}</div>
         </div>
         <div className="stat">
           <div className="stat-title">South</div>
-          <div className="stat-value">{mapBounds ? mapBounds.getSouth() : null}</div>
+          <div className="stat-value text-sm">{mapBounds ? mapBounds.getSouth() : null}</div>
         </div>
         <div className="stat">
           <div className="stat-title">East</div>
-          <div className="stat-value">{mapBounds ? mapBounds.getEast() : null}</div>
+          <div className="stat-value text-sm">{mapBounds ? mapBounds.getEast() : null}</div>
         </div>
         <div className="stat">
           <div className="stat-title">North</div>
-          <div className="stat-value">{mapBounds ? mapBounds.getNorth() : null}</div>
+          <div className="stat-value text-sm">{mapBounds ? mapBounds.getNorth() : null}</div>
+        </div>
+        <div className="stat">
+          <form onSubmit={handleGoToAction}>
+            <input
+              type="text"
+              placeholder="Goto"
+              name="address"
+              className="input input-bordered w-full max-w-xs"
+              pattern="^0x[0-9a-fA-F]{40}$"
+            />
+            <button className="btn btn-sm">Go to address</button>
+          </form>
         </div>
       </div>
 
@@ -41,17 +66,26 @@ const Home: NextPage = () => {
         <div className="drawer-content">
           <div className="hero min-h-[calc(100vh-15rem)] w-full">
             <MapContainer
-              center={[0, 0]}
+              center={intialCenter}
               zoom={1}
-              minZoom={1}
-              maxZoom={44}
+              minZoom={0}
+              maxZoom={ISO_ZOOM}
               scrollWheelZoom={true}
               crs={EvmTorus}
               className="hero-content size-full"
             >
               <TileLayer url="http://localhost:3001/tiles/{z}/{x}/{y}.png" noWrap={false} />
+              <LayersControl position="topright">
+                <LayersControl.BaseLayer name="Integer coordinates" checked={false}>
+                  <CoordinatesLayer crs={EvmTorus} noWrap={false} mode="int" />
+                </LayersControl.BaseLayer>
+                <LayersControl.BaseLayer name="Hexadecimal coordinates" checked={true}>
+                  <CoordinatesLayer crs={EvmTorus} noWrap={false} mode="hex" />
+                </LayersControl.BaseLayer>
+              </LayersControl>
               <ScaleControl />
               <MoveHandler onBoundsChange={setMapBounds} />
+              <MoveTrigger goto={goingTo} />
               {mapBounds && <Markers bounds={mapBounds} onSelect={setSelectedObject} />}
             </MapContainer>
           </div>
@@ -119,7 +153,15 @@ const MoveHandler: FunctionComponent<{ onBoundsChange: (bounds: LatLngBounds) =>
   return null;
 };
 
-// TODO : better fetch by area batches and throttle sequancial moves
+const MoveTrigger: FunctionComponent<{ goto: LatLng }> = ({ goto }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(goto);
+  }, [goto, map]);
+  return null;
+};
+
+// TODO : better fetch by area batches and throttle sequantial moves
 const dataFetch: Fetcher<EVMObject[], [LatLngBounds, string]> = async ([bounds]) => {
   const response = await fetch(`http://localhost:3001/objects?bounds=${bounds.toBBoxString()}`);
   const data = await response.json();
