@@ -1,8 +1,31 @@
-import { EvmTorus, ISO_ZOOM, MAX_SAFE_COORDINATES, MIN_SAFE_COORDINATES } from "../evmWorld";
-import L from "leaflet";
+import {
+  CoordinatesLayer,
+  CoordinatesLayerType,
+  EvmLonLat,
+  EvmTorus,
+  ISO_ZOOM,
+  MAX_SAFE_COORDINATES,
+  MIN_SAFE_COORDINATES,
+} from "../evmWorld";
+import L, { Coords, Map, Point } from "leaflet";
 
-describe("EVM World", () => {
-  let map: L.Map;
+describe("EvmLonLat projection", () => {
+  it.each([
+    ["0x0000000000000000000000000000000000000000", 0, 0],
+    ["0x8000000000000000000080000000000000000000", -562949953421312, -562949953421312],
+    ["0x7fffffffffffffffffff7fffffffffffffffffff", 562949953421311, 562949953421311],
+  ])("Converts the EVM address '%s' into a location", (address, lng, lat) => {
+    expect(EvmLonLat.fromEvmAddress(address)).toEqual(
+      expect.objectContaining({
+        lat,
+        lng,
+      }),
+    );
+  });
+});
+
+describe("EVM World Coordinated Reference System (EvmTorus)", () => {
+  let map: Map;
 
   beforeAll(() => {
     document.body.innerHTML = '<div id="map"></div>';
@@ -46,9 +69,165 @@ describe("EVM World", () => {
     const bound = map.wrapLatLng([lat, lng]);
     expect(map.unproject([x, y], zoom)).toEqual(expect.objectContaining({ lat: bound.lat, lng: bound.lng }));
   });
+});
 
-  /*
+describe.each(["int", "hex"])("CoordinatesLayer in '%s' mode", mode => {
+  let layer: CoordinatesLayerType;
+  beforeAll(() => {
+    layer = new CoordinatesLayer(EvmTorus, mode as "int" | "hex");
+  });
+
+  describe("Puts the (0,0) tile as the most northwest one", () => {
+    it.each([...Array(ISO_ZOOM + 1).keys()])("On zoom %s", z => {
+      const coords: Point | Coords = new Point(0, 0);
+      (coords as Coords).z = z;
+      const tile = layer.createTile(coords as Coords);
+
+      if (mode == "int") {
+        expect(tile.childNodes[0].textContent?.replaceAll(" ", "")).toBe("-604462909807314587353088"); // - 2^79
+        expect(tile.childNodes[1].textContent?.replaceAll(" ", "")).toBe("-604462909807314587353088"); // - 2^79
+      } else {
+        // hex
+        expect(tile.childNodes[0].textContent?.replaceAll(" ", "")).toBe("Ox80000000000000000000");
+        expect(tile.childNodes[1].textContent?.replaceAll(" ", "")).toBe("Ox80000000000000000000");
+      }
+    });
+  });
+
+  describe("Puts the (2^(zoom-1),2^(zoom-1)) tile directly on the southwest of the (0,0) point", () => {
+    it.each([...Array(ISO_ZOOM + 1).keys()])("On zoom %s", z => {
+      const coord = Math.pow(2, z - 1);
+      const coords: Point | Coords = new Point(coord, coord);
+      (coords as Coords).z = z;
+      const tile = layer.createTile(coords as Coords);
+
+      if (mode == "int") {
+        expect(tile.childNodes[0].textContent?.replaceAll(" ", "")).toBe("+0");
+        expect(tile.childNodes[1].textContent?.replaceAll(" ", "")).toBe("+0");
+      } else {
+        // hex
+        expect(tile.childNodes[0].textContent?.replaceAll(" ", "")).toBe("Ox00000000000000000000");
+        expect(tile.childNodes[1].textContent?.replaceAll(" ", "")).toBe("Ox00000000000000000000");
+      }
+    });
+  });
+
+  describe("Equally divides the grid", () => {
+    it.each([
+      // test each tile on zoom 2
+      [2, 2, 0, ["0x80000000000000000000", "0x00000000000000000000"], [-604462909807314587353088n, 0n]], // x becomes lng, y becomes lat
+      [2, 2, 1, ["0xc0000000000000000000", "0x00000000000000000000"], [-302231454903657293676544n, 0n]],
+      [2, 2, 2, ["0x00000000000000000000", "0x00000000000000000000"], [0n, 0n]],
+      [2, 2, 3, ["0x40000000000000000000", "0x00000000000000000000"], [302231454903657293676544n, 0n]],
+      // test negative coordinates are divided by two on each new zoom level
+      // applied on the center adjacent northwest tile
+      [
+        2,
+        1,
+        1,
+        ["0xc0000000000000000000", "0xc0000000000000000000"],
+        [-302231454903657293676544n, -302231454903657293676544n],
+      ],
+      [
+        3,
+        3,
+        3,
+        ["0xa0000000000000000000", "0xa0000000000000000000"],
+        [-151115727451828646838272n, -151115727451828646838272n],
+      ],
+      [
+        4,
+        7,
+        7,
+        ["0x90000000000000000000", "0x90000000000000000000"],
+        [-75557863725914323419136n, -75557863725914323419136n],
+      ],
+      [
+        5,
+        15,
+        15,
+        ["0x88000000000000000000", "0x88000000000000000000"],
+        [-37778931862957161709568n, -37778931862957161709568n],
+      ],
+      [
+        6,
+        31,
+        31,
+        ["0x84000000000000000000", "0x84000000000000000000"],
+        [-18889465931478580854784n, -18889465931478580854784n],
+      ],
+      [
+        7,
+        63,
+        63,
+        ["0x82000000000000000000", "0x82000000000000000000"],
+        [-9444732965739290427392n, -9444732965739290427392n],
+      ],
+      [
+        8,
+        127,
+        127,
+        ["0x81000000000000000000", "0x81000000000000000000"],
+        [-4722366482869645213696n, -4722366482869645213696n],
+      ],
+      [
+        9,
+        255,
+        255,
+        ["0x80800000000000000000", "0x80800000000000000000"],
+        [-2361183241434822606848n, -2361183241434822606848n],
+      ],
+      [
+        ISO_ZOOM,
+        Math.pow(2, ISO_ZOOM - 1) - 1,
+        Math.pow(2, ISO_ZOOM - 1) - 1,
+        ["0x80000000004000000000", "0x80000000004000000000"],
+        [-274877906944n, -274877906944n],
+      ], // -2^(30 + 8) 30 downscale + 8 tile
+    ])("At zoom %s, shows the tile (%s,%s) ", (z, x, y, hex, int) => {
+      const coords: Point | Coords = new Point(x, y);
+      (coords as Coords).z = z;
+      const tile = layer.createTile(coords as Coords);
+
+      if (mode == "int") {
+        expect(BigInt(tile.childNodes[0].textContent?.replaceAll(" ", "") as string)).toBe(int[0]);
+        expect(BigInt(tile.childNodes[1].textContent?.replaceAll(" ", "") as string)).toBe(int[1]);
+      } else {
+        // hex
+        expect(tile.childNodes[0].textContent?.replaceAll(" ", "")).toBe(hex[0].replace("0x", "Ox"));
+        expect(tile.childNodes[1].textContent?.replaceAll(" ", "")).toBe(hex[1].replace("0x", "Ox"));
+      }
+    });
+  });
+
   it.each([
+    // O,O is always the northwest most tile
+    [0, 0, 0, "0x80000000000000000000", "0x80000000000000000000"],
+    [0, 0, ISO_ZOOM, "0x80000000000000000000", "0x80000000000000000000"],
+    // 2^(zoom-1) is always the tile with the O,O coordinates at its northwest
+    [4, 4, 3, "0x00000000000000000000", "0x00000000000000000000"],
+    [2199023255552, 2199023255552, ISO_ZOOM, "0x00000000000000000000", "0x00000000000000000000"],
+    // zoom level 1, 4 tiles
+    [0, 0, 1, "0x80000000000000000000", "0x80000000000000000000"],
+    [0, 1, 1, "0x00000000000000000000", "0x80000000000000000000"],
+    [1, 0, 1, "0x80000000000000000000", "0x00000000000000000000"],
+    [1, 1, 1, "0x00000000000000000000", "0x00000000000000000000"],
+  ])("Displays the tile (%s,%s) at zoom %s with coordinates (%s, %s)", (x, y, z, hex_lat, hex_lng) => {
+    const coords: Point | Coords = new Point(x, y);
+    (coords as Coords).z = z;
+    const tile = layer.createTile(coords as Coords);
 
-  ])("")*/
+    if (mode == "int") {
+      expect(BigInt(tile.childNodes[0].textContent?.replaceAll(" ", "") as string)).toBe(
+        BigInt.asIntN(80, BigInt(hex_lat)),
+      );
+      expect(BigInt(tile.childNodes[1].textContent?.replaceAll(" ", "") as string)).toBe(
+        BigInt.asIntN(80, BigInt(hex_lng)),
+      );
+    } else {
+      // hex
+      expect(tile.childNodes[0].textContent?.replaceAll(" ", "")).toBe(hex_lat.replace("0x", "Ox"));
+      expect(tile.childNodes[1].textContent?.replaceAll(" ", "")).toBe(hex_lng.replace("0x", "Ox"));
+    }
+  });
 });
