@@ -71,7 +71,7 @@ describe("EVM World Coordinated Reference System (EvmTorus)", () => {
   });
 });
 
-describe.only.each(["int", "hex"])("CoordinatesLayer in '%s' mode", mode => {
+describe.each(["int", "hex"])("CoordinatesLayer in '%s' mode", mode => {
   let layer: CoordinatesLayerType;
   beforeAll(() => {
     layer = new CoordinatesLayer(EvmTorus, mode as "int" | "hex");

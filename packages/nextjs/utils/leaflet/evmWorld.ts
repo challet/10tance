@@ -22,8 +22,8 @@ import {
 export const EVM_BITS = 80;
 export const DOWNSCALE_BITS = 30;
 
-export const MAX_SAFE_COORDINATES = Math.pow(2, EVM_BITS - DOWNSCALE_BITS - 1); //   562949953421311
-export const MIN_SAFE_COORDINATES = -Math.pow(2, EVM_BITS - DOWNSCALE_BITS - 1); // -562949953421312
+export const MAX_SAFE_COORDINATES = Math.pow(2, EVM_BITS - DOWNSCALE_BITS - 1);
+export const MIN_SAFE_COORDINATES = -Math.pow(2, EVM_BITS - DOWNSCALE_BITS - 1);
 
 // The range of the world is 2^50 (-2^49 to 2^49)
 // The range of the tile is 256 (2^8)
@@ -34,8 +34,8 @@ const BASE_SCALE = 1 / Math.pow(2, ISO_ZOOM);
 
 // Bounds in "geographical" coordinates
 const WORLD_BOUNDS = new LatLngBounds(
-  new LatLng(MAX_SAFE_COORDINATES, MIN_SAFE_COORDINATES),
-  new LatLng(MIN_SAFE_COORDINATES, MAX_SAFE_COORDINATES),
+  new LatLng(MIN_SAFE_COORDINATES, MIN_SAFE_COORDINATES),
+  new LatLng(MAX_SAFE_COORDINATES, MAX_SAFE_COORDINATES),
 );
 
 // Coordinates from the EVM world are between -(2^79 - 1) and (2^79 - 1)
@@ -45,10 +45,10 @@ export const EvmLonLat = Util.extend({}, Projection.LonLat, {
   // Bounds in CRS coordinates (~ pixels at scale 1)
   bounds: new Bounds([MIN_SAFE_COORDINATES, MIN_SAFE_COORDINATES], [MAX_SAFE_COORDINATES, MAX_SAFE_COORDINATES]),
   project(latlng: LatLng) {
-    return new Point(latlng.lng - MIN_SAFE_COORDINATES, MIN_SAFE_COORDINATES - latlng.lat);
+    return new Point(latlng.lng + MAX_SAFE_COORDINATES, MAX_SAFE_COORDINATES - latlng.lat);
   },
   unproject(point: Point) {
-    return new LatLng(point.y - MIN_SAFE_COORDINATES, point.x + MIN_SAFE_COORDINATES);
+    return new LatLng(MAX_SAFE_COORDINATES - point.y, point.x - MAX_SAFE_COORDINATES);
   },
   fromEvmAddress(address: string): LatLng {
     const [lat, lng] = computeLocation(address.replace("Ox", "0x"));
@@ -62,7 +62,7 @@ export const EvmTorus: CRS & { constraintsLatLngBounds: (bounds: LatLngBounds) =
   {
     /* overriding methods and members */
     wrapLng: [MIN_SAFE_COORDINATES, MAX_SAFE_COORDINATES],
-    wrapLat: [MIN_SAFE_COORDINATES, MAX_SAFE_COORDINATES],
+    wrapLat: [MAX_SAFE_COORDINATES, MIN_SAFE_COORDINATES],
     zoom(scale: number) {
       Math.log(scale / BASE_SCALE) / Math.LN2;
     },
@@ -70,7 +70,7 @@ export const EvmTorus: CRS & { constraintsLatLngBounds: (bounds: LatLngBounds) =
       return zoom == 0 ? BASE_SCALE : BASE_SCALE * Math.pow(2, zoom);
     },
     projection: EvmLonLat,
-    transformation: transformation(1, 0, -1, 0),
+    transformation: transformation(1, 0, 1, 0),
     infinite: false, // it's a torus : east connects with west and north with south
 
     /* custom methods */
