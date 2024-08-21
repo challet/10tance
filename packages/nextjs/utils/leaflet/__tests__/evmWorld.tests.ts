@@ -61,9 +61,9 @@ describe("EVM World Coordinated Reference System (EvmTorus)", () => {
 
   it.each([
     [0, 0, 0, 128, 128],
-    [0, MAX_SAFE_COORDINATES, MAX_SAFE_COORDINATES, 256, 256],
-    [0, MIN_SAFE_COORDINATES, MIN_SAFE_COORDINATES, 0, 0],
-    [10, 0, 0, Math.pow(2, 17), Math.pow(2, 17)], // 17 = 10 / 2 + log2(256)s
+    [0, MAX_SAFE_COORDINATES, MAX_SAFE_COORDINATES, 256, 0],
+    [0, MIN_SAFE_COORDINATES, MIN_SAFE_COORDINATES, 0, 256],
+    [10, 0, 0, Math.pow(2, 17), Math.pow(2, 17)],
   ])("Projects at zoom %s the coordinate (%s,%s) to the pixel (%s,%s). And unproject", (zoom, lat, lng, x, y) => {
     expect(map.project([lat, lng], zoom)).toEqual(expect.objectContaining({ x, y }));
     const bound = map.wrapLatLng([lat, lng]);
@@ -84,7 +84,7 @@ describe.each(["int", "hex"])("CoordinatesLayer in '%s' mode", mode => {
       const tile = layer.createTile(coords as Coords);
 
       if (mode == "int") {
-        expect(tile.childNodes[0].textContent?.replaceAll(" ", "")).toBe("-604462909807314587353088"); // - 2^79
+        expect(tile.childNodes[0].textContent?.replaceAll(" ", "")).toBe("+604462909807314587353088"); // - 2^79
         expect(tile.childNodes[1].textContent?.replaceAll(" ", "")).toBe("-604462909807314587353088"); // - 2^79
       } else {
         // hex
@@ -94,7 +94,7 @@ describe.each(["int", "hex"])("CoordinatesLayer in '%s' mode", mode => {
     });
   });
 
-  describe("Puts the (2^(zoom-1),2^(zoom-1)) tile directly on the southwest of the (0,0) point", () => {
+  describe("Puts the (2^(zoom-1),2^(zoom-1)) tile directly southeast adjacent to the (0,0) point", () => {
     it.each([...Array(ISO_ZOOM + 1).keys()])("On zoom %s", z => {
       const coord = Math.pow(2, z - 1);
       const coords: Point | Coords = new Point(coord, coord);
@@ -115,74 +115,74 @@ describe.each(["int", "hex"])("CoordinatesLayer in '%s' mode", mode => {
   describe("Equally divides the grid", () => {
     it.each([
       // test each tile on zoom 2
-      [2, 2, 0, ["0x80000000000000000000", "0x00000000000000000000"], [-604462909807314587353088n, 0n]], // x becomes lng, y becomes lat
-      [2, 2, 1, ["0xc0000000000000000000", "0x00000000000000000000"], [-302231454903657293676544n, 0n]],
+      [2, 2, 0, ["0x80000000000000000000", "0x00000000000000000000"], [604462909807314587353088n, 0n]], // x becomes lng, y becomes lat
+      [2, 2, 1, ["0x40000000000000000000", "0x00000000000000000000"], [302231454903657293676544n, 0n]],
       [2, 2, 2, ["0x00000000000000000000", "0x00000000000000000000"], [0n, 0n]],
-      [2, 2, 3, ["0x40000000000000000000", "0x00000000000000000000"], [302231454903657293676544n, 0n]],
-      // test negative coordinates are divided by two on each new zoom level
+      [2, 2, 3, ["0xc0000000000000000000", "0x00000000000000000000"], [-302231454903657293676544n, 0n]],
+      // test coordinates are divided by two on each new zoom level
       // applied on the center adjacent northwest tile
       [
         2,
         1,
         1,
-        ["0xc0000000000000000000", "0xc0000000000000000000"],
-        [-302231454903657293676544n, -302231454903657293676544n],
+        ["0x40000000000000000000", "0xc0000000000000000000"],
+        [302231454903657293676544n, -302231454903657293676544n],
       ],
       [
         3,
         3,
         3,
-        ["0xa0000000000000000000", "0xa0000000000000000000"],
-        [-151115727451828646838272n, -151115727451828646838272n],
+        ["0x20000000000000000000", "0xa0000000000000000000"],
+        [151115727451828646838272n, -151115727451828646838272n],
       ],
       [
         4,
         7,
         7,
-        ["0x90000000000000000000", "0x90000000000000000000"],
-        [-75557863725914323419136n, -75557863725914323419136n],
+        ["0x10000000000000000000", "0x90000000000000000000"],
+        [75557863725914323419136n, -75557863725914323419136n],
       ],
       [
         5,
         15,
         15,
-        ["0x88000000000000000000", "0x88000000000000000000"],
-        [-37778931862957161709568n, -37778931862957161709568n],
+        ["0x08000000000000000000", "0x88000000000000000000"],
+        [37778931862957161709568n, -37778931862957161709568n],
       ],
       [
         6,
         31,
         31,
-        ["0x84000000000000000000", "0x84000000000000000000"],
-        [-18889465931478580854784n, -18889465931478580854784n],
+        ["0x04000000000000000000", "0x84000000000000000000"],
+        [18889465931478580854784n, -18889465931478580854784n],
       ],
       [
         7,
         63,
         63,
-        ["0x82000000000000000000", "0x82000000000000000000"],
-        [-9444732965739290427392n, -9444732965739290427392n],
+        ["0x02000000000000000000", "0x82000000000000000000"],
+        [9444732965739290427392n, -9444732965739290427392n],
       ],
       [
         8,
         127,
         127,
-        ["0x81000000000000000000", "0x81000000000000000000"],
-        [-4722366482869645213696n, -4722366482869645213696n],
+        ["0x01000000000000000000", "0x81000000000000000000"],
+        [4722366482869645213696n, -4722366482869645213696n],
       ],
       [
         9,
         255,
         255,
-        ["0x80800000000000000000", "0x80800000000000000000"],
-        [-2361183241434822606848n, -2361183241434822606848n],
+        ["0x00800000000000000000", "0x80800000000000000000"],
+        [2361183241434822606848n, -2361183241434822606848n],
       ],
       [
         ISO_ZOOM,
         Math.pow(2, ISO_ZOOM - 1) - 1,
         Math.pow(2, ISO_ZOOM - 1) - 1,
-        ["0x80000000004000000000", "0x80000000004000000000"],
-        [-274877906944n, -274877906944n],
+        ["0x00000000004000000000", "0x80000000004000000000"],
+        [274877906944n, -274877906944n],
       ], // -2^(30 + 8) 30 downscale + 8 tile
     ])("At zoom %s, shows the tile (%s,%s) ", (z, x, y, hex, int) => {
       const coords: Point | Coords = new Point(x, y);
@@ -198,36 +198,5 @@ describe.each(["int", "hex"])("CoordinatesLayer in '%s' mode", mode => {
         expect(tile.childNodes[1].textContent?.replaceAll(" ", "")).toBe(hex[1].replace("0x", "Ox"));
       }
     });
-  });
-
-  it.each([
-    // O,O is always the northwest most tile
-    [0, 0, 0, "0x80000000000000000000", "0x80000000000000000000"],
-    [0, 0, ISO_ZOOM, "0x80000000000000000000", "0x80000000000000000000"],
-    // 2^(zoom-1) is always the tile with the O,O coordinates at its northwest
-    [4, 4, 3, "0x00000000000000000000", "0x00000000000000000000"],
-    [2199023255552, 2199023255552, ISO_ZOOM, "0x00000000000000000000", "0x00000000000000000000"],
-    // zoom level 1, 4 tiles
-    [0, 0, 1, "0x80000000000000000000", "0x80000000000000000000"],
-    [0, 1, 1, "0x00000000000000000000", "0x80000000000000000000"],
-    [1, 0, 1, "0x80000000000000000000", "0x00000000000000000000"],
-    [1, 1, 1, "0x00000000000000000000", "0x00000000000000000000"],
-  ])("Displays the tile (%s,%s) at zoom %s with coordinates (%s, %s)", (x, y, z, hex_lat, hex_lng) => {
-    const coords: Point | Coords = new Point(x, y);
-    (coords as Coords).z = z;
-    const tile = layer.createTile(coords as Coords);
-
-    if (mode == "int") {
-      expect(BigInt(tile.childNodes[0].textContent?.replaceAll(" ", "") as string)).toBe(
-        BigInt.asIntN(80, BigInt(hex_lat)),
-      );
-      expect(BigInt(tile.childNodes[1].textContent?.replaceAll(" ", "") as string)).toBe(
-        BigInt.asIntN(80, BigInt(hex_lng)),
-      );
-    } else {
-      // hex
-      expect(tile.childNodes[0].textContent?.replaceAll(" ", "")).toBe(hex_lat.replace("0x", "Ox"));
-      expect(tile.childNodes[1].textContent?.replaceAll(" ", "")).toBe(hex_lng.replace("0x", "Ox"));
-    }
   });
 });

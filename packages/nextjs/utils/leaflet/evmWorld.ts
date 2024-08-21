@@ -22,8 +22,8 @@ import {
 export const EVM_BITS = 80;
 export const DOWNSCALE_BITS = 30;
 
-export const MAX_SAFE_COORDINATES = Math.pow(2, EVM_BITS - DOWNSCALE_BITS - 1); //  562949953421311
-export const MIN_SAFE_COORDINATES = -Math.pow(2, EVM_BITS - DOWNSCALE_BITS - 1); // -562949953421312
+export const MAX_SAFE_COORDINATES = Math.pow(2, EVM_BITS - DOWNSCALE_BITS - 1);
+export const MIN_SAFE_COORDINATES = -Math.pow(2, EVM_BITS - DOWNSCALE_BITS - 1);
 
 // The range of the world is 2^50 (-2^49 to 2^49)
 // The range of the tile is 256 (2^8)
@@ -34,8 +34,8 @@ const BASE_SCALE = 1 / Math.pow(2, ISO_ZOOM);
 
 // Bounds in "geographical" coordinates
 const WORLD_BOUNDS = new LatLngBounds(
-  new LatLng(MAX_SAFE_COORDINATES, MIN_SAFE_COORDINATES),
-  new LatLng(MIN_SAFE_COORDINATES, MAX_SAFE_COORDINATES),
+  new LatLng(MIN_SAFE_COORDINATES, MIN_SAFE_COORDINATES),
+  new LatLng(MAX_SAFE_COORDINATES, MAX_SAFE_COORDINATES),
 );
 
 // Coordinates from the EVM world are between -(2^79 - 1) and (2^79 - 1)
@@ -45,10 +45,10 @@ export const EvmLonLat = Util.extend({}, Projection.LonLat, {
   // Bounds in CRS coordinates (~ pixels at scale 1)
   bounds: new Bounds([MIN_SAFE_COORDINATES, MIN_SAFE_COORDINATES], [MAX_SAFE_COORDINATES, MAX_SAFE_COORDINATES]),
   project(latlng: LatLng) {
-    return new Point(latlng.lng - MIN_SAFE_COORDINATES, latlng.lat - MIN_SAFE_COORDINATES);
+    return new Point(latlng.lng + MAX_SAFE_COORDINATES, MAX_SAFE_COORDINATES - latlng.lat);
   },
   unproject(point: Point) {
-    return new LatLng(point.y + MIN_SAFE_COORDINATES, point.x + MIN_SAFE_COORDINATES);
+    return new LatLng(MAX_SAFE_COORDINATES - point.y, point.x - MAX_SAFE_COORDINATES);
   },
   fromEvmAddress(address: string): LatLng {
     const [lat, lng] = computeLocation(address.replace("Ox", "0x"));
@@ -62,7 +62,7 @@ export const EvmTorus: CRS & { constraintsLatLngBounds: (bounds: LatLngBounds) =
   {
     /* overriding methods and members */
     wrapLng: [MIN_SAFE_COORDINATES, MAX_SAFE_COORDINATES],
-    wrapLat: [MIN_SAFE_COORDINATES, MAX_SAFE_COORDINATES],
+    wrapLat: [MAX_SAFE_COORDINATES, MIN_SAFE_COORDINATES],
     zoom(scale: number) {
       Math.log(scale / BASE_SCALE) / Math.LN2;
     },
@@ -102,7 +102,7 @@ export const EvmTorus: CRS & { constraintsLatLngBounds: (bounds: LatLngBounds) =
 
 const intFormat = new Intl.NumberFormat("nu", { useGrouping: "always", signDisplay: "always" });
 
-const numberFormater = (nb: number, mode: CoordinatesLayerMode) => {
+const coordinateFormater = (nb: number, mode: CoordinatesLayerMode) => {
   // Upscale to fit the actual EVM resolution
   const evm_nb = BigInt(nb) * BigInt(Math.pow(2, 30));
 
@@ -115,9 +115,9 @@ const numberFormater = (nb: number, mode: CoordinatesLayerMode) => {
     return "Ox ".concat(
       signed_evm_nb
         .toString(16) // hexa display
-        .replace(/^\-?([0-9A-F]+)$/, "$1") // remove the potential "-" at the start
+        .replace(/^\-?([0-9a-f]+)$/, "$1") // remove the potential "-" at the start
         .padStart(20, "0") // pad with zeros
-        .replaceAll(/([0-9A-F]{4})/g, "$1 "), // display by group of 4
+        .replaceAll(/([0-9a-f]{4})/g, "$1 "), // display by group of 4
     );
   }
 };
@@ -145,11 +145,12 @@ export const CoordinatesLayer: new (
     const size = this.getTileSize();
     const northwest = this._crs.pointToLatLng(new Point(coords.x * size.x, coords.y * size.y), coords.z);
 
-    DomUtil.create("span", "absolute inset-x-0 top-0", tile).textContent = numberFormater(northwest.lat, this._mode);
-    DomUtil.create("span", "absolute inset-y-0 left-0 [writing-mode:sideways-lr]", tile).textContent = numberFormater(
-      northwest.lng,
+    DomUtil.create("span", "absolute inset-x-0 top-0", tile).textContent = coordinateFormater(
+      northwest.lat,
       this._mode,
     );
+    DomUtil.create("span", "absolute inset-y-0 left-0 [writing-mode:sideways-lr]", tile).textContent =
+      coordinateFormater(northwest.lng, this._mode);
 
     return tile;
   },
