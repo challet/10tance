@@ -1,33 +1,30 @@
 "use client";
 
-import { FormEvent, FunctionComponent, useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { FormEvent, FunctionComponent, useCallback } from "react";
 import Image from "next/image";
 import defaultIcon from "../public/question-mark-circle.svg";
-import { EvmLonLat, EvmTorus, ISO_ZOOM } from "../utils/leaflet/evmWorld";
-import { LatLng, LatLngBounds, LeafletEvent } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { NextPage } from "next";
-import { LayersControl, MapContainer, Marker, ScaleControl, TileLayer, useMap, useMapEvent } from "react-leaflet";
 import useSWR, { Fetcher } from "swr";
-import CoordinatesLayer from "~~/components/leaflet/CoordinatesLayer";
-import useErc20Icons from "~~/hooks/10tance/useErc20Icons";
-import type { EVMObject } from "~~/types/10tance/EVMObject";
-
-const intialCenter = new LatLng(0, 0);
+import Map from "~~/components/leaflet/Map";
+import { useGlobalState } from "~~/services/store/store";
+import { EvmLonLat } from "~~/utils/leaflet/evmWorld";
 
 const Home: NextPage = () => {
-  const [mapBounds, setMapBounds] = useState<LatLngBounds | null>(null);
+  const setMapToGoTo = useGlobalState(state => state.setMapToGoTo);
+  const handleGoToAction = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const target = event.target as typeof event.target & {
+        address: { value: string };
+      };
+      setMapToGoTo(EvmLonLat.fromEvmAddress(target.address.value));
+    },
+    [setMapToGoTo],
+  );
 
-  const [goingTo, goTo] = useState<LatLng>(intialCenter);
-  const handleGoToAction = useCallback((event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const target = event.target as typeof event.target & {
-      address: { value: string };
-    };
-    goTo(EvmLonLat.fromEvmAddress(target.address.value));
-  }, []);
-
-  const [selectedObject, setSelectedObject] = useState<object | null>(null);
+  const mapBounds = useGlobalState(state => state.map.bounds);
+  const selectedObject = useGlobalState(state => state.map.selectedObject);
 
   return (
     <>
@@ -66,29 +63,7 @@ const Home: NextPage = () => {
         <input id="my-drawer" type="checkbox" className="drawer-toggle" checked={selectedObject != null} readOnly />
         <div className="drawer-content">
           <div className="hero min-h-[calc(100vh-15rem)] w-full">
-            <MapContainer
-              center={intialCenter}
-              zoom={1}
-              minZoom={0}
-              maxZoom={ISO_ZOOM}
-              scrollWheelZoom={true}
-              crs={EvmTorus}
-              className="hero-content size-full"
-            >
-              <TileLayer url="http://localhost:3001/tiles/{z}/{x}/{y}.png" noWrap={false} />
-              <LayersControl position="topright">
-                <LayersControl.BaseLayer name="Integer coordinates" checked={false}>
-                  <CoordinatesLayer crs={EvmTorus} noWrap={false} mode="int" />
-                </LayersControl.BaseLayer>
-                <LayersControl.BaseLayer name="Hexadecimal coordinates" checked={true}>
-                  <CoordinatesLayer crs={EvmTorus} noWrap={false} mode="hex" />
-                </LayersControl.BaseLayer>
-              </LayersControl>
-              <ScaleControl />
-              <MoveHandler onBoundsChange={setMapBounds} />
-              <MoveTrigger goto={goingTo} />
-              {mapBounds && <Markers bounds={mapBounds} onSelect={setSelectedObject} />}
-            </MapContainer>
+            <Map />
           </div>
         </div>
         <div className="drawer-side w-[30rem] absolute h-full">
@@ -145,48 +120,6 @@ const ObjectDetails: FunctionComponent<{ initialData: any }> = ({ initialData })
       </ul>
     </>
   );
-};
-
-const MoveHandler: FunctionComponent<{ onBoundsChange: (bounds: LatLngBounds) => void }> = ({ onBoundsChange }) => {
-  const map = useMap();
-  useLayoutEffect(() => onBoundsChange(map.getBounds()), [map, onBoundsChange]);
-  useMapEvent("move", event => onBoundsChange(event.target.getBounds()));
-  return null;
-};
-
-const MoveTrigger: FunctionComponent<{ goto: LatLng }> = ({ goto }) => {
-  const map = useMap();
-  useEffect(() => {
-    map.setView(goto);
-  }, [goto, map]);
-  return null;
-};
-
-// TODO : better fetch by area batches and throttle sequantial moves
-const dataFetch: Fetcher<EVMObject[], [LatLngBounds, string]> = async ([bounds]) => {
-  const response = await fetch(`http://localhost:3001/objects?bounds=${bounds.toBBoxString()}`);
-  const data = await response.json();
-  return data;
-};
-
-const Markers: FunctionComponent<{ bounds: LatLngBounds; onSelect: (id: object) => void }> = ({ bounds, onSelect }) => {
-  const map = useMap();
-  const { data } = useSWR([EvmTorus.constraintsLatLngBounds(map.wrapLatLngBounds(bounds)), "map-data"], dataFetch, {
-    fallbackData: [],
-  });
-  const icons = useErc20Icons(data);
-  const eventHandlers = useMemo(
-    () => ({
-      click(event: LeafletEvent) {
-        onSelect(event.target.options["data-data"]);
-      },
-    }),
-    [onSelect],
-  );
-
-  return data.map(d => (
-    <Marker position={[d.lat, d.lng]} icon={icons[d.id]} key={d.id} data-data={d} eventHandlers={eventHandlers} />
-  ));
 };
 
 export default Home;

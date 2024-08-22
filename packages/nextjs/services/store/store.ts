@@ -1,5 +1,7 @@
+import { LatLng, LatLngBounds } from "leaflet";
 import create from "zustand";
 import scaffoldConfig from "~~/scaffold.config";
+import { EVMObject } from "~~/types/10tance/EVMObject";
 import { ChainWithAttributes } from "~~/utils/scaffold-eth";
 
 /**
@@ -20,6 +22,15 @@ type GlobalState = {
   setIsNativeCurrencyFetching: (newIsNativeCurrencyFetching: boolean) => void;
   targetNetwork: ChainWithAttributes;
   setTargetNetwork: (newTargetNetwork: ChainWithAttributes) => void;
+
+  map: {
+    bounds: LatLngBounds;
+    goingTo: LatLng;
+    selectedObject: EVMObject | null;
+  };
+  setMapBounds: (bounds: LatLngBounds) => void;
+  setMapToGoTo: (goingTo: LatLng) => void;
+  setSelectedObject: (selectedObject: EVMObject) => void;
 };
 
 export const useGlobalState = create<GlobalState>(set => ({
@@ -33,4 +44,13 @@ export const useGlobalState = create<GlobalState>(set => ({
     set(state => ({ nativeCurrency: { ...state.nativeCurrency, isFetching: newValue } })),
   targetNetwork: scaffoldConfig.targetNetworks[0],
   setTargetNetwork: (newTargetNetwork: ChainWithAttributes) => set(() => ({ targetNetwork: newTargetNetwork })),
+
+  map: {
+    bounds: new LatLngBounds([0, 0], [0, 0]),
+    goingTo: new LatLng(0, 0),
+    selectedObject: null,
+  },
+  setMapBounds: (bounds: LatLngBounds): void => set(state => ({ map: { ...state.map, bounds } })),
+  setMapToGoTo: (goingTo: LatLng): void => set(state => ({ map: { ...state.map, goingTo } })),
+  setSelectedObject: (selectedObject: EVMObject): void => set(state => ({ map: { ...state.map, selectedObject } })),
 }));
