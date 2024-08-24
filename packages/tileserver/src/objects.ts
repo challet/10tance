@@ -19,8 +19,6 @@ const routeFactory = async () => {
       boundsPolygon = `POLYGON((${east} ${south}, ${east} ${north}, ${west} ${north}, ${west} ${south}, ${east} ${south}))`
     }
 
-    //
-
     const data = await EVMObject.findAll({
       attributes: [
         // TODO inpect why the binary data cannot be raw fetched
@@ -38,7 +36,7 @@ const routeFactory = async () => {
           db.literal(`ST_Within(latlng::geometry, ST_GeomFromText('${boundsPolygon}'))`)
         ],
       },
-      limit: 50
+      limit: 30
     });
     res.json(data.map((d) => {
       return {

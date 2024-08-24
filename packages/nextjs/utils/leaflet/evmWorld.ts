@@ -15,6 +15,7 @@ import {
   Util,
   transformation,
 } from "leaflet";
+import { tileKey } from "~~/services/store/store";
 
 // The native Javascript min and max integers are respectively -(2^53 – 1) and (2^53 – 1)
 // None map computations should result in over or underflow
@@ -102,7 +103,7 @@ export const EvmTorus: CRS & { constraintsLatLngBounds: (bounds: LatLngBounds) =
 
 const intFormat = new Intl.NumberFormat("nu", { useGrouping: "always", signDisplay: "always" });
 
-const coordinateFormater = (nb: number, mode: CoordinatesLayerMode) => {
+const coordinateFormatter = (nb: number, mode: CoordinatesLayerMode) => {
   // Upscale to fit the actual EVM resolution
   const evm_nb = BigInt(nb) * BigInt(Math.pow(2, 30));
 
@@ -122,7 +123,10 @@ const coordinateFormater = (nb: number, mode: CoordinatesLayerMode) => {
   }
 };
 
-export type CoordinatesLayerType = GridLayer & { createTile: (coords: Coords) => HTMLElement };
+export type CoordinatesLayerType = GridLayer & {
+  createTile: (coords: Coords) => HTMLElement;
+  keyToBounds(tile: tileKey): LatLngBounds;
+};
 export type CoordinatesLayerMode = "int" | "hex";
 
 export const CoordinatesLayer: new (
@@ -133,6 +137,13 @@ export const CoordinatesLayer: new (
   initialize: function (crs: CRS, mode: CoordinatesLayerMode, options: GridLayerOptions | void = {}) {
     this._crs = crs;
     this._mode = mode;
+    // TODO force options to be used only with the "VirtualTileLayer" hack
+    options = {
+      ...options,
+      updateWhenZooming: false,
+      updateInterval: 1000,
+      noWrap: true,
+    };
     // TODO it would be better to call the super GridLayer.initialize but this custom extension system seems to break it
     Util.setOptions(this, options);
   },
@@ -145,13 +156,23 @@ export const CoordinatesLayer: new (
     const size = this.getTileSize();
     const northwest = this._crs.pointToLatLng(new Point(coords.x * size.x, coords.y * size.y), coords.z);
 
-    DomUtil.create("span", "absolute inset-x-0 top-0", tile).textContent = coordinateFormater(
+    DomUtil.create("span", "absolute inset-x-0 top-0", tile).textContent = coordinateFormatter(
       northwest.lat,
       this._mode,
     );
     DomUtil.create("span", "absolute inset-y-0 left-0 [writing-mode:sideways-lr]", tile).textContent =
-      coordinateFormater(northwest.lng, this._mode);
+      coordinateFormatter(northwest.lng, this._mode);
 
     return tile;
+  },
+  // TODO following methods are used only for the "VirtualTileLayer" hack
+  _retainChildren: function (): void {
+    return undefined; // retain no child
+  },
+  _retainParent: function (): void {
+    return undefined; // retain no parent
+  },
+  keyToBounds: function (tile: tileKey): LatLngBounds {
+    return this._keyToBounds(tile);
   },
 });
