@@ -1,88 +1,115 @@
-import { FunctionComponent, useEffect, useLayoutEffect, useMemo } from "react";
-import { LatLng, LatLngBounds, LeafletEvent } from "leaflet";
-import { LayersControl, MapContainer, Marker, ScaleControl, TileLayer, useMap, useMapEvent } from "react-leaflet";
-import useSWR, { Fetcher } from "swr";
-import CoordinatesLayer from "~~/components/leaflet/CoordinatesLayer";
+import { FunctionComponent, useCallback, useEffect, useLayoutEffect, useMemo } from "react";
+import { Coords, LeafletEvent, TileEvent } from "leaflet";
+import {
+  LayersControl,
+  MapContainer,
+  Marker,
+  ScaleControl,
+  TileLayer,
+  Tooltip,
+  useMap,
+  useMapEvent,
+} from "react-leaflet";
+import CoordinatesLayerComponent from "~~/components/leaflet/CoordinatesLayer";
 import useErc20Icons from "~~/hooks/10tance/useErc20Icons";
-import { useGlobalState } from "~~/services/store/store";
-import type { EVMObject } from "~~/types/10tance/EVMObject";
+import useRetrieveDisplayedObjects from "~~/hooks/10tance/useRetrieveDisplayedObjects";
+import { type tileKey, useGlobalState } from "~~/services/store/store";
 import { EvmTorus, ISO_ZOOM } from "~~/utils/leaflet/evmWorld";
 
+// copied from GridLayer._tileCoordsToKey since the instance created by the map is not easily reachable
+const tileCoordsTokey = (coords: Coords): tileKey => `${coords.x}:${coords.y}:${coords.z}`;
+
 const Map: FunctionComponent = () => {
-  const setMapBounds = useGlobalState(state => state.setMapBounds);
-  const setSelectedObject = useGlobalState(state => state.setSelectedObject);
-  const goingTo = useGlobalState(state => state.map.goingTo);
-  const mapBounds = useGlobalState(state => state.map.bounds);
+  const addActiveTile = useGlobalState(state => state.addActiveTile);
+  const removeActiveTile = useGlobalState(state => state.removeActiveTile);
+  const onTileLoad = useCallback(
+    (event: TileEvent) => {
+      addActiveTile(tileCoordsTokey(event.coords));
+    },
+    [addActiveTile],
+  );
+  const onTileUnload = useCallback(
+    (event: TileEvent) => {
+      removeActiveTile(tileCoordsTokey(event.coords));
+    },
+    [removeActiveTile],
+  );
 
   return (
     <MapContainer
-      center={goingTo} // immutable, it will only be used as the intial value. See <MoveTrigger /> component to handle changes
-      zoom={1}
-      minZoom={0}
+      center={[0, 0]} // immutable, it will only be used as the intial value. See <MoveTrigger /> component to handle changes
+      zoom={2}
+      minZoom={1}
       maxZoom={ISO_ZOOM}
       scrollWheelZoom={true}
       crs={EvmTorus}
       className="hero-content size-full"
     >
-      <TileLayer url="http://localhost:3001/tiles/{z}/{x}/{y}.png" noWrap={false} />
+      <TileLayer
+        url="http://localhost:3001/tiles/{z}/{x}/{y}.png"
+        noWrap={true}
+        eventHandlers={{ tileloadstart: onTileLoad, tileunload: onTileUnload }}
+      />
       <LayersControl position="topright">
         <LayersControl.BaseLayer name="Integer coordinates" checked={false}>
-          <CoordinatesLayer crs={EvmTorus} noWrap={false} mode="int" />
+          <CoordinatesLayerComponent crs={EvmTorus} noWrap={false} mode="int" />
         </LayersControl.BaseLayer>
         <LayersControl.BaseLayer name="Hexadecimal coordinates" checked={true}>
-          <CoordinatesLayer crs={EvmTorus} noWrap={false} mode="hex" />
+          <CoordinatesLayerComponent crs={EvmTorus} noWrap={false} mode="hex" />
         </LayersControl.BaseLayer>
       </LayersControl>
       <ScaleControl />
-      <MoveHandler onBoundsChange={setMapBounds} />
-      <MoveTrigger goto={goingTo} />
-      {mapBounds && <Markers bounds={mapBounds} onSelect={setSelectedObject} />}
+      <MoveHandler />
+      ``
+      <MoveTrigger />
+      <EvmMarkers />
     </MapContainer>
   );
 };
 
-const MoveHandler: FunctionComponent<{ onBoundsChange: (bounds: LatLngBounds) => void }> = ({ onBoundsChange }) => {
+// store the bounds coordinates when the map move
+const MoveHandler: FunctionComponent = () => {
   const map = useMap();
-  useLayoutEffect(() => onBoundsChange(map.getBounds()), [map, onBoundsChange]);
-  useMapEvent("move", event => onBoundsChange(event.target.getBounds()));
+  const setMapBounds = useGlobalState(state => state.setMapBounds);
+  useLayoutEffect(() => setMapBounds(map.getBounds()), [map, setMapBounds]); // call it once at first render
+  useMapEvent("move", event => setMapBounds(event.target.getBounds()));
   return null;
 };
 
-const MoveTrigger: FunctionComponent<{ goto: LatLng }> = ({ goto }) => {
+// reacts to a change in the "goingTo" state
+const MoveTrigger: FunctionComponent = () => {
   const map = useMap();
+  const goingTo = useGlobalState(state => state.map.goingTo);
   useEffect(() => {
-    map.setView(goto);
-  }, [goto, map]);
+    map.setView(goingTo);
+  }, [goingTo, map]);
   return null;
 };
 
-// TODO : better fetch by area batches and throttle sequantial moves
-const dataFetch: Fetcher<EVMObject[], [LatLngBounds, string]> = async ([bounds]) => {
-  const response = await fetch(`http://localhost:3001/objects?bounds=${bounds.toBBoxString()}`);
-  const data = await response.json();
-  return data;
-};
-
-const Markers: FunctionComponent<{ bounds: LatLngBounds; onSelect: (data: EVMObject) => void }> = ({
-  bounds,
-  onSelect,
-}) => {
+// load objects and display them
+const EvmMarkers: FunctionComponent = () => {
   const map = useMap();
-  const { data } = useSWR([EvmTorus.constraintsLatLngBounds(map.wrapLatLngBounds(bounds)), "map-data"], dataFetch, {
-    fallbackData: [],
-  });
-  const icons = useErc20Icons(data);
+  const setMapTileLayerInstance = useGlobalState(state => state.setMapTileLayerInstance);
+  useEffect(() => setMapTileLayerInstance(map), [map, setMapTileLayerInstance]);
+
+  const getIcon = useErc20Icons();
+  const setSelectedObject = useGlobalState(state => state.setSelectedObject);
+
+  const data = useRetrieveDisplayedObjects();
+
   const eventHandlers = useMemo(
     () => ({
       click(event: LeafletEvent) {
-        onSelect(event.target.options["data-data"]);
+        setSelectedObject(event.target.options["data-data"]);
       },
     }),
-    [onSelect],
+    [setSelectedObject],
   );
 
   return data.map(d => (
-    <Marker position={[d.lat, d.lng]} icon={icons[d.id]} key={d.id} data-data={d} eventHandlers={eventHandlers} />
+    <Marker position={[d.lat, d.lng]} icon={getIcon(d.icon_url)} key={d.id} data-data={d} eventHandlers={eventHandlers}>
+      <Tooltip>{d.name}</Tooltip>
+    </Marker>
   ));
 };
 

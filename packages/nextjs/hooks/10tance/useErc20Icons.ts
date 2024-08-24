@@ -1,23 +1,26 @@
-import { useState } from "react";
 import defaultIcon from "../../public/question-mark-circle.svg";
-import type { EVMObject } from "../../types/10tance/EVMObject.d.ts";
 import { Icon } from "leaflet";
 
-export default function useErc20Icons(data: EVMObject[]): Record<string, Icon> {
-  const [icons, setIcons] = useState<Record<string, Icon>>({});
-  // update the icons store if needed
-  const missing = data
-    .filter(d => !(d.id in icons))
-    .map(d => [
-      d.id,
-      new Icon({
-        iconUrl: d.icon_url ?? defaultIcon.src,
-        iconSize: [29, 29],
-        iconAnchor: [15, 15],
-      }),
-    ]);
-  if (missing.length) {
-    setIcons({ ...icons, ...Object.fromEntries(missing) });
-  }
-  return icons;
+// global cache
+const iconsCache: Record<string, Icon> = {
+  [defaultIcon.src]: new Icon({
+    iconUrl: defaultIcon.src,
+    iconSize: [17, 17],
+    iconAnchor: [9, 9],
+  }),
+};
+
+// not really a hook, it just provide a function as global icons cache accessor
+export default function useErc20Icons(): (url: string | undefined) => Icon {
+  return (url = defaultIcon.src) => {
+    url = url ?? defaultIcon.src;
+    if (!(url in iconsCache)) {
+      iconsCache[url] = new Icon({
+        iconUrl: url,
+        iconSize: [21, 21],
+        iconAnchor: [11, 11],
+      });
+    }
+    return iconsCache[url];
+  };
 }
