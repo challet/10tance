@@ -15,12 +15,10 @@ import { ChainWithAttributes } from "~~/utils/scaffold-eth";
  */
 
 export type tileKey = ReturnType<CoordinatesLayerType["_tileCoordsToKey"]>;
-export type EVMObjectRecord = Record<evmAddress, EVMObject>;
+export type loadStatus = { isLoading: boolean; isLoaded: boolean };
+export type EVMObjectRecord = Record<evmAddress, { status: loadStatus; data: EVMObject | null }>;
 export type tileIndex = {
-  status: {
-    isLoading: boolean;
-    isLoaded: boolean;
-  };
+  status: loadStatus;
   addresses: Set<evmAddress>;
 };
 
@@ -40,14 +38,14 @@ export type GlobalState = {
     tileLayerInstance: CoordinatesLayerType | null;
     bounds: LatLngBounds;
     goingTo: LatLng | null;
-    selectedObject: EVMObject | null;
+    selectedObject: EVMObject["id"] | null;
     activeTiles: Set<tileKey>;
     evmObjectsIndex: Record<tileKey, tileIndex>;
   };
   setMapTileLayerInstance: (map: Map) => void;
   setMapBounds: (bounds: LatLngBounds) => void;
   setMapToGoTo: (goingTo: LatLng | null) => void;
-  setSelectedObject: (selectedObject: EVMObject | null) => void;
+  setSelectedObject: (selectedObject: EVMObject["id"] | null) => void;
   addActiveTile: (tile: tileKey) => void;
   removeActiveTile: (tile: tileKey) => void;
   flushActiveTiles: () => void;
@@ -93,7 +91,7 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
     }),
   setMapBounds: (bounds: LatLngBounds): void => set(state => ({ map: { ...state.map, bounds } })),
   setMapToGoTo: (goingTo: LatLng | null): void => set(state => ({ map: { ...state.map, goingTo } })),
-  setSelectedObject: (selectedObject: EVMObject | null): void =>
+  setSelectedObject: (selectedObject: EVMObject["id"] | null): void =>
     set(state => ({ map: { ...state.map, selectedObject } })),
   addActiveTile: (tile: tileKey): void =>
     set(state => ({ map: { ...state.map, activeTiles: new Set(state.map.activeTiles).add(tile) } })),
@@ -111,14 +109,17 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
         : { status: { isLoading: false, isLoaded: false }, addresses: new Set() };
 
     if (oldIndexEntry.status.isLoaded || oldIndexEntry.status.isLoading) {
-      // do nothing is already loaded or being loaded
+      // do nothing if already loaded or being loaded
       return;
     } else {
       // flag the entry as being loaded
       set(state => ({
         map: {
           ...state.map,
-          evmObjectsIndex: { ...state.map.evmObjectsIndex, [tileKey]: { ...oldIndexEntry, isLoading: true } },
+          evmObjectsIndex: {
+            ...state.map.evmObjectsIndex,
+            [tileKey]: { ...oldIndexEntry, status: { ...oldIndexEntry.status, isLoading: true } },
+          },
         },
       }));
     }
@@ -135,9 +136,17 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
       // create a partial record with incoming data
       const newObjectsPartialRecord: EVMObjectRecord = Object.fromEntries(
         objects.map(newObject => {
+          let oldEntry, status;
+          if (newObject.id in state.evmObjects) {
+            oldEntry = state.evmObjects[newObject.id].data;
+            status = state.evmObjects[newObject.id].status;
+          } else {
+            oldEntry = {};
+            // status here refers to the extra data fetched from the fetchExtraEvmObject action
+            status = { isLoaded: false, isLoading: false };
+          }
           // create or update if it is already known
-          const oldObject = newObject.id in state.evmObjects ? state.evmObjects[newObject.id] : {};
-          return [newObject.id, { ...oldObject, ...newObject }];
+          return [newObject.id, { status, data: { ...oldEntry, ...newObject } }];
         }),
       );
 
@@ -154,12 +163,39 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
     });
   },
   // it's supposed to update an already known object
-  fetchExtraEvmObject: (id: EVMObject["id"]): void =>
+  fetchExtraEvmObject: async (id: EVMObject["id"]): Promise<void> => {
+    const oldEntry =
+      id in get().evmObjects ? get().evmObjects[id] : { status: { isLoading: false, isLoaded: false }, data: null };
+
+    if (oldEntry.status.isLoaded || oldEntry.status.isLoading) {
+      // do nothing if already loaded or being loaded
+      return;
+    } else {
+      // flag the entry as being loaded
+      set(state => ({
+        evmObjects: {
+          ...state.evmObjects,
+          [id]: { ...oldEntry, status: { ...oldEntry.status, isLoading: true } },
+        },
+      }));
+    }
+
+    const response = await fetch(`https://optimism.blockscout.com/api/v2/tokens/${id}`);
+    const data = await response.json();
+
     set(state => {
-      // TODO call the fetch here
-      const object = {};
       return {
-        evmObjects: { ...state.evmObjects, [id]: { ...(state.evmObjects[id] ?? {}), ...object } },
+        evmObjects: {
+          ...state.evmObjects,
+          [id]: {
+            data: {
+              ...(state.evmObjects[id].data ?? {}),
+              ...data,
+            },
+            status: { isLoaded: true, isLoading: false },
+          },
+        },
       };
-    }),
+    });
+  },
 }));

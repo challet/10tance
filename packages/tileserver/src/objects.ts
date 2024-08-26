@@ -43,6 +43,7 @@ const routeFactory = async () => {
         id: d.id,
         lat: d.latlng.y,
         lng: d.latlng.x,
+        symbol: d.meta.symbol,
         name: d.meta.name,
         icon_url: d.meta.icon_url
       };

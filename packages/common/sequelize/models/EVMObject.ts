@@ -8,6 +8,7 @@ interface EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttri
   },
   type: string,
   meta: {
+    symbol?: string,
     name?: string;
     icon_url?: string,
     circulating_market_cap?: number

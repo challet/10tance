@@ -41,7 +41,8 @@ async function erc20Fetch(db:Sequelize, options: any): Promise<any> {
       latlng: db.fn('POINT', lng, lat),
       type: 'ERC20',
       meta: {
-        name: d.symbol,
+        symbol: d.symbol,
+        name: d.name,
         icon_url: d.icon_url,
         circulating_market_cap: parseFloat(d.circulating_market_cap),
         holders: parseInt(d.holders)

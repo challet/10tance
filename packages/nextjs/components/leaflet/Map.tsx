@@ -100,7 +100,7 @@ const EvmMarkers: FunctionComponent = () => {
   useEffect(() => setMapTileLayerInstance(map), [map, setMapTileLayerInstance]);
 
   const data = useRetrieveDisplayedObjects();
-  const selectedObjectId = useGlobalState(state => state.map.selectedObject?.id);
+  const selectedObjectId = useGlobalState(state => state.map.selectedObject);
   const setSelectedObject = useGlobalState(state => state.setSelectedObject);
 
   const eventHandlers = useMemo(
@@ -117,10 +117,11 @@ const EvmMarkers: FunctionComponent = () => {
       position={[d.lat, d.lng]}
       icon={getIcon(d.icon_url, d.id === selectedObjectId)}
       key={d.id}
-      data-data={d}
+      data-data={d.id}
       eventHandlers={eventHandlers}
+      zIndexOffset={d.id === selectedObjectId ? 1000 : 0}
     >
-      <Tooltip>{d.name}</Tooltip>
+      <Tooltip>{d.symbol}</Tooltip>
     </Marker>
   ));
 };

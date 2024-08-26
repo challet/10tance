@@ -19,5 +19,7 @@ export default function useRetrieveDisplayedObjects(): EVMObject[] {
   const uniqueAddresses = Array.from(activeTiles).reduce((current, tileKey) => {
     return tileKey in index ? current.union(index[tileKey].addresses) : current;
   }, new Set<evmAddress>());
-  return Array.from(uniqueAddresses).map(address => objects[address]);
+  return Array.from(uniqueAddresses)
+    .filter(address => objects[address].data !== undefined)
+    .map(address => objects[address].data as EVMObject);
 }

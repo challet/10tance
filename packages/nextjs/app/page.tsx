@@ -5,9 +5,9 @@ import Image from "next/image";
 import defaultIcon from "../public/question-mark-circle.svg";
 import "leaflet/dist/leaflet.css";
 import type { NextPage } from "next";
-import useSWR, { Fetcher } from "swr";
 import Map from "~~/components/leaflet/Map";
 import { AddressInput } from "~~/components/scaffold-eth";
+import useRetrieveSelectedObject from "~~/hooks/10tance/useRetrieveSelectedObject";
 import { useGlobalState } from "~~/services/store/store";
 import { EvmLonLat } from "~~/utils/leaflet/evmWorld";
 
@@ -68,7 +68,7 @@ const Home: NextPage = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            {selectedObject != null && <ObjectDetails initialData={selectedObject} />}
+            <ObjectDetails />
           </div>
         </div>
       </div>
@@ -105,52 +105,55 @@ const GoToUserControl: FunctionComponent = () => {
   );
 };
 
-const tokenFetch: Fetcher<any, [string, string]> = async ([id]) => {
-  const response = await fetch(`https://optimism.blockscout.com/api/v2/tokens/${id}`);
-  const data = await response.json();
-  return data;
-};
-
-const ObjectDetails: FunctionComponent<{ initialData: any }> = ({ initialData }) => {
-  const { data, isLoading } = useSWR([initialData.id, "token-data"], tokenFetch);
-  return (
-    <>
-      <ul className="text-base-content w-[30rem] p-4">
-        <li className="content-center">
-          <Image
-            className="aspect-square size-20 p-0"
-            src={initialData.icon_url ?? defaultIcon.src}
-            alt={initialData.name}
-            width={80}
-            height={80}
-          />
-        </li>
-        <li>
-          <h2 className="text-lg font-semibold">{initialData.name}</h2>
-        </li>
-        <li>Address : {initialData.id} </li>
-        <li>Latitude : {initialData.lat} </li>
-        <li>Longitude : {initialData.lng} </li>
-        {isLoading ? (
-          <li>loading</li>
-        ) : (
-          <>
-            <li>Full name : {data.name}</li>
-            <li>Circulating market cap : {data.circulating_market_cap}</li>
-            <li>Holders : {data.holders}</li>
-            <li>Exchange rate : {data.exchange_rate}</li>
-            <li>Total supply : {data.total_supply}</li>
-          </>
-        )}
-        <li>
-          See more on &nbsp;
-          <a href={`https://optimism.blockscout.com/address/${initialData.id}`} target="_blank" className="underline">
-            Blockscout explorer
-          </a>
-        </li>
-      </ul>
-    </>
-  );
+const ObjectDetails: FunctionComponent = () => {
+  const { isLoading, data } = useRetrieveSelectedObject();
+  console.log(data);
+  if (data === null) {
+    if (!isLoading) {
+      return "no data";
+    } else {
+      return "loading";
+    }
+  } else {
+    return (
+      <>
+        <ul className="text-base-content w-[30rem] p-4">
+          <li className="content-center">
+            <Image
+              className="aspect-square size-20 p-0"
+              src={data.icon_url ?? defaultIcon.src}
+              alt={data.symbol}
+              width={80}
+              height={80}
+            />
+          </li>
+          <li>
+            <h2 className="text-lg font-semibold">{data.symbol}</h2>
+          </li>
+          <li>Address : {data.id} </li>
+          <li>Latitude : {data.lat} </li>
+          <li>Longitude : {data.lng} </li>
+          {isLoading ? ( // it is partially loaded
+            <li>loading</li>
+          ) : (
+            <>
+              <li>Full name : {data.name}</li>
+              <li>Circulating market cap : {data.circulating_market_cap}</li>
+              <li>Holders : {data.holders}</li>
+              <li>Exchange rate : {data.exchange_rate}</li>
+              <li>Total supply : {data.total_supply}</li>
+            </>
+          )}
+          <li>
+            See more on &nbsp;
+            <a href={`https://optimism.blockscout.com/address/${data.id}`} target="_blank" className="underline">
+              Blockscout explorer
+            </a>
+          </li>
+        </ul>
+      </>
+    );
+  }
 };
 
 export default Home;
