@@ -11,10 +11,10 @@ import {
   useMapEvent,
 } from "react-leaflet";
 import CoordinatesLayerComponent from "~~/components/leaflet/CoordinatesLayer";
-import useErc20Icons from "~~/hooks/10tance/useErc20Icons";
 import useRetrieveDisplayedObjects from "~~/hooks/10tance/useRetrieveDisplayedObjects";
 import { type tileKey, useGlobalState } from "~~/services/store/store";
 import { EvmTorus, ISO_ZOOM } from "~~/utils/leaflet/evmWorld";
+import getIcon from "~~/utils/leaflet/getIcon";
 
 // copied from GridLayer._tileCoordsToKey since the instance created by the map is not easily reachable
 const tileCoordsTokey = (coords: Coords): tileKey => `${coords.x}:${coords.y}:${coords.z}`;
@@ -100,7 +100,7 @@ const EvmMarkers: FunctionComponent = () => {
   useEffect(() => setMapTileLayerInstance(map), [map, setMapTileLayerInstance]);
 
   const data = useRetrieveDisplayedObjects();
-  const getIcon = useErc20Icons();
+  const selectedObjectId = useGlobalState(state => state.map.selectedObject?.id);
   const setSelectedObject = useGlobalState(state => state.setSelectedObject);
 
   const eventHandlers = useMemo(
@@ -113,7 +113,13 @@ const EvmMarkers: FunctionComponent = () => {
   );
 
   return data.map(d => (
-    <Marker position={[d.lat, d.lng]} icon={getIcon(d.icon_url)} key={d.id} data-data={d} eventHandlers={eventHandlers}>
+    <Marker
+      position={[d.lat, d.lng]}
+      icon={getIcon(d.icon_url, d.id === selectedObjectId)}
+      key={d.id}
+      data-data={d}
+      eventHandlers={eventHandlers}
+    >
       <Tooltip>{d.name}</Tooltip>
     </Marker>
   ));
