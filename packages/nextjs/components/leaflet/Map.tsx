@@ -60,28 +60,35 @@ const Map: FunctionComponent = () => {
       </LayersControl>
       <ScaleControl />
       <MoveHandler />
-      ``
-      <MoveTrigger />
       <EvmMarkers />
     </MapContainer>
   );
 };
 
-// store the bounds coordinates when the map move
+// reacts to and control changes in the map position
 const MoveHandler: FunctionComponent = () => {
   const map = useMap();
-  const setMapBounds = useGlobalState(state => state.setMapBounds);
-  useLayoutEffect(() => setMapBounds(map.getBounds()), [map, setMapBounds]); // call it once at first render
-  useMapEvent("move", event => setMapBounds(event.target.getBounds()));
-  return null;
-};
-
-// reacts to a change in the "goingTo" state
-const MoveTrigger: FunctionComponent = () => {
-  const map = useMap();
   const goingTo = useGlobalState(state => state.map.goingTo);
+  const setMapBounds = useGlobalState(state => state.setMapBounds);
+  const setMapToGoTo = useGlobalState(state => state.setMapToGoTo);
+  const setSelectedObject = useGlobalState(state => state.setSelectedObject);
+
+  // store the bounds of the map
+  useLayoutEffect(() => setMapBounds(map.getBounds()), [map, setMapBounds]); // call it once at first render
+  useMapEvent("move", event => {
+    setMapBounds(event.target.getBounds());
+  });
+  // reset states when the user moves the map
+  // it shouldn't fire on thechange through "goingTo" state below, which uses the "noMoveStart" option
+  useMapEvent("movestart", () => {
+    setMapToGoTo(null);
+    setSelectedObject(null);
+  });
+  // move the map when it has been requested so
   useEffect(() => {
-    map.setView(goingTo);
+    if (goingTo !== null) {
+      map.panTo(goingTo, { noMoveStart: true });
+    }
   }, [goingTo, map]);
   return null;
 };
@@ -92,10 +99,9 @@ const EvmMarkers: FunctionComponent = () => {
   const setMapTileLayerInstance = useGlobalState(state => state.setMapTileLayerInstance);
   useEffect(() => setMapTileLayerInstance(map), [map, setMapTileLayerInstance]);
 
+  const data = useRetrieveDisplayedObjects();
   const getIcon = useErc20Icons();
   const setSelectedObject = useGlobalState(state => state.setSelectedObject);
-
-  const data = useRetrieveDisplayedObjects();
 
   const eventHandlers = useMemo(
     () => ({
