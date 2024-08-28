@@ -16,6 +16,7 @@ export default function useRetrieveDisplayedObjects(): EVMObject[] {
   }, [missingTiles, fetchBatchEvmObjects]);
 
   // addresses can have duplicates during transitions between zoom levels
+  // using a Set union ensure uniqueness
   const uniqueAddresses = Array.from(activeTiles).reduce((current, tileKey) => {
     return tileKey in index ? current.union(index[tileKey].addresses) : current;
   }, new Set<evmAddress>());

@@ -13,7 +13,7 @@ import { EvmLonLat } from "~~/utils/leaflet/evmWorld";
 
 const Home: NextPage = () => {
   const mapBounds = useGlobalState(state => state.map.bounds);
-  const selectedObject = useGlobalState(state => state.map.selectedObject);
+  const selectedObject = useGlobalState(state => state.selectedObject);
   const setSelectedObject = useGlobalState(state => state.setSelectedObject);
 
   const unselectObjectHandler = useCallback(

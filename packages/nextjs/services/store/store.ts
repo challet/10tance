@@ -33,12 +33,12 @@ export type GlobalState = {
   setTargetNetwork: (newTargetNetwork: ChainWithAttributes) => void;
 
   evmObjects: EVMObjectRecord;
+  selectedObject: EVMObject["id"] | null;
 
   map: {
     tileLayerInstance: CoordinatesLayerType | null;
     bounds: LatLngBounds;
     goingTo: LatLng | null;
-    selectedObject: EVMObject["id"] | null;
     activeTiles: Set<tileKey>;
     evmObjectsIndex: Record<tileKey, tileIndex>;
   };
@@ -68,11 +68,11 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
   // until here
 
   evmObjects: {},
+  selectedObject: null,
   map: {
     tileLayerInstance: null,
     bounds: new LatLngBounds([0, 0], [0, 0]),
     goingTo: null,
-    selectedObject: null,
     evmObjectsIndex: {},
     activeTiles: new Set(),
   },
@@ -91,8 +91,7 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
     }),
   setMapBounds: (bounds: LatLngBounds): void => set(state => ({ map: { ...state.map, bounds } })),
   setMapToGoTo: (goingTo: LatLng | null): void => set(state => ({ map: { ...state.map, goingTo } })),
-  setSelectedObject: (selectedObject: EVMObject["id"] | null): void =>
-    set(state => ({ map: { ...state.map, selectedObject } })),
+  setSelectedObject: (selectedObject: EVMObject["id"] | null): void => set(() => ({ selectedObject })),
   addActiveTile: (tile: tileKey): void =>
     set(state => ({ map: { ...state.map, activeTiles: new Set(state.map.activeTiles).add(tile) } })),
   removeActiveTile: (tile: tileKey): void =>

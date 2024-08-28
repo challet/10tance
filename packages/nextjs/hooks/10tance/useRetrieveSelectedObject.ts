@@ -6,10 +6,10 @@ export default function useRetrieveSelectedObject(): { isLoading: boolean; data:
   const fetchExtraEvmObject = useGlobalState(state => state.fetchExtraEvmObject);
   const [selectedObjectId, selectedObject, needFetch, isLoading] = useGlobalState(
     (state): [EVMObject["id"] | null, EVMObject | null, boolean, boolean] => {
-      const requestedId = state.map.selectedObject;
+      const requestedId = state.selectedObject;
       const existingEntry =
-        state.map.selectedObject !== null && state.map.selectedObject in state.evmObjects
-          ? state.evmObjects[state.map.selectedObject]
+        state.selectedObject !== null && state.selectedObject in state.evmObjects
+          ? state.evmObjects[state.selectedObject]
           : null;
 
       return [

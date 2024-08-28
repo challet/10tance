@@ -100,7 +100,7 @@ const EvmMarkers: FunctionComponent = () => {
   useEffect(() => setMapTileLayerInstance(map), [map, setMapTileLayerInstance]);
 
   const data = useRetrieveDisplayedObjects();
-  const selectedObjectId = useGlobalState(state => state.map.selectedObject);
+  const selectedObjectId = useGlobalState(state => state.selectedObject);
   const setSelectedObject = useGlobalState(state => state.setSelectedObject);
 
   const eventHandlers = useMemo(

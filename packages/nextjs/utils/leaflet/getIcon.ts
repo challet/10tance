@@ -9,7 +9,7 @@ const DEFAULT_OPTIONS = {
 const HIGHLIHGTEHD_OPTIONS = {
   iconSize: [49, 49] as PointTuple,
   iconAnchor: [25, 25] as PointTuple,
-  className: "bg-purple-600/[.55] border-8 rounded-full border-purple-600/0 shadow-md shadow-purple-600/[.55]",
+  className: "bg-purple-600/[.55] border-8 rounded-full border-transparent shadow-md shadow-purple-600/[.55]",
 };
 
 // global cache avoiding to recreate the Icon each time
