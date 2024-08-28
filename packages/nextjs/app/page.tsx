@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, FunctionComponent, MouseEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, FunctionComponent, useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import defaultIcon from "../public/question-mark-circle.svg";
 import "leaflet/dist/leaflet.css";
@@ -16,13 +16,9 @@ const Home: NextPage = () => {
   const selectedObject = useGlobalState(state => state.selectedObject);
   const setSelectedObject = useGlobalState(state => state.setSelectedObject);
 
-  const unselectObjectHandler = useCallback(
-    (event: MouseEvent<HTMLButtonElement>) => {
-      console.log(event);
-      setSelectedObject(null);
-    },
-    [setSelectedObject],
-  );
+  const unselectObjectHandler = useCallback(() => {
+    setSelectedObject(null);
+  }, [setSelectedObject]);
 
   return (
     <>
@@ -80,6 +76,7 @@ const GoToUserControl: FunctionComponent = () => {
   const [localGoTo, setLocalGoTo] = useState("");
   const goingTo = useGlobalState(state => state.map.goingTo);
   const setMapToGoTo = useGlobalState(state => state.setMapToGoTo);
+  const setSelectedObject = useGlobalState(state => state.setSelectedObject);
   // reset the control here only after the global has reseted (not on all changes)
   useEffect(() => {
     if (goingTo === null) {
@@ -94,8 +91,9 @@ const GoToUserControl: FunctionComponent = () => {
         address: { value: string };
       };
       setMapToGoTo(EvmLonLat.fromEvmAddress(target.address.value));
+      setSelectedObject(target.address.value);
     },
-    [setMapToGoTo],
+    [setMapToGoTo, setSelectedObject],
   );
   return (
     <form onSubmit={handleGoToAction}>
@@ -107,7 +105,6 @@ const GoToUserControl: FunctionComponent = () => {
 
 const ObjectDetails: FunctionComponent = () => {
   const { isLoading, data } = useRetrieveSelectedObject();
-  console.log(data);
   if (data === null) {
     if (!isLoading) {
       return "no data";

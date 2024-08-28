@@ -2,7 +2,7 @@ import { LatLng, LatLngBounds, Map } from "leaflet";
 import create from "zustand";
 import scaffoldConfig from "~~/scaffold.config";
 import { EVMObject, evmAddress } from "~~/types/10tance/EVMObject";
-import { CoordinatesLayer, CoordinatesLayerType } from "~~/utils/leaflet/evmWorld";
+import { CoordinatesLayer, CoordinatesLayerType, EvmLonLat } from "~~/utils/leaflet/evmWorld";
 import { ChainWithAttributes } from "~~/utils/scaffold-eth";
 
 /**
@@ -179,20 +179,30 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
       }));
     }
 
+    let data;
     const response = await fetch(`https://optimism.blockscout.com/api/v2/tokens/${id}`);
-    const data = await response.json();
+    if (response.ok) {
+      data = await response.json();
+      const location = EvmLonLat.fromEvmAddress(id);
+      data.id = id;
+      data.lat = location.lat;
+      data.lng = location.lng;
+    } else if (response.status == 404) {
+      data = null;
+    } else {
+      throw new Error(response.statusText);
+    }
 
     set(state => {
+      const newEntry = {
+        data:
+          oldEntry.data === null && data === null ? null : { ...(state.evmObjects[id].data ?? {}), ...(data ?? {}) },
+        status: { isLoaded: true, isLoading: false },
+      };
       return {
         evmObjects: {
           ...state.evmObjects,
-          [id]: {
-            data: {
-              ...(state.evmObjects[id].data ?? {}),
-              ...data,
-            },
-            status: { isLoaded: true, isLoading: false },
-          },
+          [id]: newEntry,
         },
       };
     });
