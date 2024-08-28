@@ -49,6 +49,8 @@ const Map: FunctionComponent = () => {
         url="http://localhost:3001/tiles/{z}/{x}/{y}.png"
         noWrap={true}
         eventHandlers={{ tileloadstart: onTileLoad, tileunload: onTileUnload }}
+        minZoom={0}
+        maxZoom={ISO_ZOOM}
       />
       <LayersControl position="topright">
         <LayersControl.BaseLayer name="Integer coordinates" checked={false}>
