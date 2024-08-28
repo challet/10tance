@@ -43,7 +43,7 @@ const Map: FunctionComponent = () => {
       maxZoom={ISO_ZOOM}
       scrollWheelZoom={true}
       crs={EvmTorus}
-      className="hero-content size-full"
+      className="size-full"
     >
       <TileLayer
         url="http://localhost:3001/tiles/{z}/{x}/{y}.png"
