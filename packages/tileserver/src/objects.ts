@@ -33,7 +33,7 @@ const routeFactory = async () => {
       ],
       where: {
         [Op.and]: [
-          db.literal(`ST_Within(latlng::geometry, ST_GeomFromText('${boundsPolygon}'))`)
+          db.literal(`ST_CoveredBy(latlng::geometry, ST_GeomFromText('${boundsPolygon}'))`)
         ],
       },
       limit: 30
