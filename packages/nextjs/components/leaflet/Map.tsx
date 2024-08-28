@@ -11,10 +11,10 @@ import {
   useMapEvent,
 } from "react-leaflet";
 import CoordinatesLayerComponent from "~~/components/leaflet/CoordinatesLayer";
-import useErc20Icons from "~~/hooks/10tance/useErc20Icons";
 import useRetrieveDisplayedObjects from "~~/hooks/10tance/useRetrieveDisplayedObjects";
 import { type tileKey, useGlobalState } from "~~/services/store/store";
 import { EvmTorus, ISO_ZOOM } from "~~/utils/leaflet/evmWorld";
+import getIcon from "~~/utils/leaflet/getIcon";
 
 // copied from GridLayer._tileCoordsToKey since the instance created by the map is not easily reachable
 const tileCoordsTokey = (coords: Coords): tileKey => `${coords.x}:${coords.y}:${coords.z}`;
@@ -60,28 +60,35 @@ const Map: FunctionComponent = () => {
       </LayersControl>
       <ScaleControl />
       <MoveHandler />
-      ``
-      <MoveTrigger />
       <EvmMarkers />
     </MapContainer>
   );
 };
 
-// store the bounds coordinates when the map move
+// reacts to and control changes in the map position
 const MoveHandler: FunctionComponent = () => {
   const map = useMap();
-  const setMapBounds = useGlobalState(state => state.setMapBounds);
-  useLayoutEffect(() => setMapBounds(map.getBounds()), [map, setMapBounds]); // call it once at first render
-  useMapEvent("move", event => setMapBounds(event.target.getBounds()));
-  return null;
-};
-
-// reacts to a change in the "goingTo" state
-const MoveTrigger: FunctionComponent = () => {
-  const map = useMap();
   const goingTo = useGlobalState(state => state.map.goingTo);
+  const setMapBounds = useGlobalState(state => state.setMapBounds);
+  const setMapToGoTo = useGlobalState(state => state.setMapToGoTo);
+  const setSelectedObject = useGlobalState(state => state.setSelectedObject);
+
+  // store the bounds of the map
+  useLayoutEffect(() => setMapBounds(map.getBounds()), [map, setMapBounds]); // call it once at first render
+  useMapEvent("move", event => {
+    setMapBounds(event.target.getBounds());
+  });
+  // reset states when the user moves the map
+  // it shouldn't fire on thechange through "goingTo" state below, which uses the "noMoveStart" option
+  useMapEvent("movestart", () => {
+    setMapToGoTo(null);
+    setSelectedObject(null);
+  });
+  // move the map when it has been requested so
   useEffect(() => {
-    map.setView(goingTo);
+    if (goingTo !== null) {
+      map.panTo(goingTo, { noMoveStart: true });
+    }
   }, [goingTo, map]);
   return null;
 };
@@ -92,10 +99,9 @@ const EvmMarkers: FunctionComponent = () => {
   const setMapTileLayerInstance = useGlobalState(state => state.setMapTileLayerInstance);
   useEffect(() => setMapTileLayerInstance(map), [map, setMapTileLayerInstance]);
 
-  const getIcon = useErc20Icons();
-  const setSelectedObject = useGlobalState(state => state.setSelectedObject);
-
   const data = useRetrieveDisplayedObjects();
+  const selectedObjectId = useGlobalState(state => state.selectedObject);
+  const setSelectedObject = useGlobalState(state => state.setSelectedObject);
 
   const eventHandlers = useMemo(
     () => ({
@@ -107,8 +113,15 @@ const EvmMarkers: FunctionComponent = () => {
   );
 
   return data.map(d => (
-    <Marker position={[d.lat, d.lng]} icon={getIcon(d.icon_url)} key={d.id} data-data={d} eventHandlers={eventHandlers}>
-      <Tooltip>{d.name}</Tooltip>
+    <Marker
+      position={[d.lat, d.lng]}
+      icon={getIcon(d.icon_url, d.id === selectedObjectId)}
+      key={d.id}
+      data-data={d.id}
+      eventHandlers={eventHandlers}
+      zIndexOffset={d.id === selectedObjectId ? 1000 : 0}
+    >
+      <Tooltip>{d.symbol}</Tooltip>
     </Marker>
   ));
 };

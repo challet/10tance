@@ -2,7 +2,7 @@ import { LatLng, LatLngBounds, Map } from "leaflet";
 import create from "zustand";
 import scaffoldConfig from "~~/scaffold.config";
 import { EVMObject, evmAddress } from "~~/types/10tance/EVMObject";
-import { CoordinatesLayer, CoordinatesLayerType } from "~~/utils/leaflet/evmWorld";
+import { CoordinatesLayer, CoordinatesLayerType, EvmLonLat } from "~~/utils/leaflet/evmWorld";
 import { ChainWithAttributes } from "~~/utils/scaffold-eth";
 
 /**
@@ -15,12 +15,10 @@ import { ChainWithAttributes } from "~~/utils/scaffold-eth";
  */
 
 export type tileKey = ReturnType<CoordinatesLayerType["_tileCoordsToKey"]>;
-export type EVMObjectRecord = Record<evmAddress, EVMObject>;
+export type loadStatus = { isLoading: boolean; isLoaded: boolean };
+export type EVMObjectRecord = Record<evmAddress, { status: loadStatus; data: EVMObject | null }>;
 export type tileIndex = {
-  status: {
-    isLoading: boolean;
-    isLoaded: boolean;
-  };
+  status: loadStatus;
   addresses: Set<evmAddress>;
 };
 
@@ -35,19 +33,19 @@ export type GlobalState = {
   setTargetNetwork: (newTargetNetwork: ChainWithAttributes) => void;
 
   evmObjects: EVMObjectRecord;
+  selectedObject: EVMObject["id"] | null;
 
   map: {
     tileLayerInstance: CoordinatesLayerType | null;
     bounds: LatLngBounds;
-    goingTo: LatLng;
-    selectedObject: EVMObject | null;
+    goingTo: LatLng | null;
     activeTiles: Set<tileKey>;
     evmObjectsIndex: Record<tileKey, tileIndex>;
   };
   setMapTileLayerInstance: (map: Map) => void;
   setMapBounds: (bounds: LatLngBounds) => void;
-  setMapToGoTo: (goingTo: LatLng) => void;
-  setSelectedObject: (selectedObject: EVMObject | null) => void;
+  setMapToGoTo: (goingTo: LatLng | null) => void;
+  setSelectedObject: (selectedObject: EVMObject["id"] | null) => void;
   addActiveTile: (tile: tileKey) => void;
   removeActiveTile: (tile: tileKey) => void;
   flushActiveTiles: () => void;
@@ -70,11 +68,11 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
   // until here
 
   evmObjects: {},
+  selectedObject: null,
   map: {
     tileLayerInstance: null,
     bounds: new LatLngBounds([0, 0], [0, 0]),
-    goingTo: new LatLng(0, 0),
-    selectedObject: null,
+    goingTo: null,
     evmObjectsIndex: {},
     activeTiles: new Set(),
   },
@@ -92,9 +90,8 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
       return { map: { ...state.map, tileLayerInstance } };
     }),
   setMapBounds: (bounds: LatLngBounds): void => set(state => ({ map: { ...state.map, bounds } })),
-  setMapToGoTo: (goingTo: LatLng): void => set(state => ({ map: { ...state.map, goingTo } })),
-  setSelectedObject: (selectedObject: EVMObject | null): void =>
-    set(state => ({ map: { ...state.map, selectedObject } })),
+  setMapToGoTo: (goingTo: LatLng | null): void => set(state => ({ map: { ...state.map, goingTo } })),
+  setSelectedObject: (selectedObject: EVMObject["id"] | null): void => set(() => ({ selectedObject })),
   addActiveTile: (tile: tileKey): void =>
     set(state => ({ map: { ...state.map, activeTiles: new Set(state.map.activeTiles).add(tile) } })),
   removeActiveTile: (tile: tileKey): void =>
@@ -111,14 +108,17 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
         : { status: { isLoading: false, isLoaded: false }, addresses: new Set() };
 
     if (oldIndexEntry.status.isLoaded || oldIndexEntry.status.isLoading) {
-      // do nothing is already loaded or being loaded
+      // do nothing if already loaded or being loaded
       return;
     } else {
       // flag the entry as being loaded
       set(state => ({
         map: {
           ...state.map,
-          evmObjectsIndex: { ...state.map.evmObjectsIndex, [tileKey]: { ...oldIndexEntry, isLoading: true } },
+          evmObjectsIndex: {
+            ...state.map.evmObjectsIndex,
+            [tileKey]: { ...oldIndexEntry, status: { ...oldIndexEntry.status, isLoading: true } },
+          },
         },
       }));
     }
@@ -135,9 +135,17 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
       // create a partial record with incoming data
       const newObjectsPartialRecord: EVMObjectRecord = Object.fromEntries(
         objects.map(newObject => {
+          let oldEntry, status;
+          if (newObject.id in state.evmObjects) {
+            oldEntry = state.evmObjects[newObject.id].data;
+            status = state.evmObjects[newObject.id].status;
+          } else {
+            oldEntry = {};
+            // status here refers to the extra data fetched from the fetchExtraEvmObject action
+            status = { isLoaded: false, isLoading: false };
+          }
           // create or update if it is already known
-          const oldObject = newObject.id in state.evmObjects ? state.evmObjects[newObject.id] : {};
-          return [newObject.id, { ...oldObject, ...newObject }];
+          return [newObject.id, { status, data: { ...oldEntry, ...newObject } }];
         }),
       );
 
@@ -154,12 +162,49 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
     });
   },
   // it's supposed to update an already known object
-  fetchExtraEvmObject: (id: EVMObject["id"]): void =>
+  fetchExtraEvmObject: async (id: EVMObject["id"]): Promise<void> => {
+    const oldEntry =
+      id in get().evmObjects ? get().evmObjects[id] : { status: { isLoading: false, isLoaded: false }, data: null };
+
+    if (oldEntry.status.isLoaded || oldEntry.status.isLoading) {
+      // do nothing if already loaded or being loaded
+      return;
+    } else {
+      // flag the entry as being loaded
+      set(state => ({
+        evmObjects: {
+          ...state.evmObjects,
+          [id]: { ...oldEntry, status: { ...oldEntry.status, isLoading: true } },
+        },
+      }));
+    }
+
+    let data;
+    const response = await fetch(`https://optimism.blockscout.com/api/v2/tokens/${id}`);
+    if (response.ok) {
+      data = await response.json();
+      const location = EvmLonLat.fromEvmAddress(id);
+      data.id = id;
+      data.lat = location.lat;
+      data.lng = location.lng;
+    } else if (response.status == 404) {
+      data = null;
+    } else {
+      throw new Error(response.statusText);
+    }
+
     set(state => {
-      // TODO call the fetch here
-      const object = {};
-      return {
-        evmObjects: { ...state.evmObjects, [id]: { ...(state.evmObjects[id] ?? {}), ...object } },
+      const newEntry = {
+        data:
+          oldEntry.data === null && data === null ? null : { ...(state.evmObjects[id].data ?? {}), ...(data ?? {}) },
+        status: { isLoaded: true, isLoading: false },
       };
-    }),
+      return {
+        evmObjects: {
+          ...state.evmObjects,
+          [id]: newEntry,
+        },
+      };
+    });
+  },
 }));
