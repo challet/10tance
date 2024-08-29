@@ -1,8 +1,8 @@
-import { LatLng, LatLngBounds, Map } from "leaflet";
+import type { LatLng, LatLngBounds, Layer } from "leaflet";
 import create from "zustand";
 import scaffoldConfig from "~~/scaffold.config";
 import { EVMObject, evmAddress } from "~~/types/10tance/EVMObject";
-import { CoordinatesLayer, CoordinatesLayerType, EvmLonLat } from "~~/utils/leaflet/evmWorld";
+import type { CoordinatesLayerType } from "~~/utils/leaflet/evmWorld";
 import { ChainWithAttributes } from "~~/utils/scaffold-eth";
 
 /**
@@ -37,12 +37,12 @@ export type GlobalState = {
 
   map: {
     tileLayerInstance: CoordinatesLayerType | null;
-    bounds: LatLngBounds;
+    bounds: LatLngBounds | null;
     goingTo: LatLng | null;
     activeTiles: Set<tileKey>;
     evmObjectsIndex: Record<tileKey, tileIndex>;
   };
-  setMapTileLayerInstance: (map: Map) => void;
+  setMapTileLayerInstance: (layer: Layer) => void;
   setMapBounds: (bounds: LatLngBounds) => void;
   setMapToGoTo: (goingTo: LatLng | null) => void;
   setSelectedObject: (selectedObject: EVMObject["id"] | null) => void;
@@ -71,24 +71,24 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
   selectedObject: null,
   map: {
     tileLayerInstance: null,
-    bounds: new LatLngBounds([0, 0], [0, 0]),
+    bounds: null,
     goingTo: null,
     evmObjectsIndex: {},
     activeTiles: new Set(),
   },
-  setMapTileLayerInstance: (map: Map): void =>
+  setMapTileLayerInstance: async (layer: Layer): Promise<void> => {
+    const { CoordinatesLayer } = await import("~~/utils/leaflet/evmWorld");
     set(state => {
       // TODO could do better:
       // - create a specialized "virtual layer"
       // - it would register himself somehow instead of iterating through the map layers
-      let tileLayerInstance: CoordinatesLayerType | null = null;
-      map.eachLayer(layer => {
-        if (tileLayerInstance == null && layer instanceof CoordinatesLayer) {
-          tileLayerInstance = layer;
-        }
-      });
-      return { map: { ...state.map, tileLayerInstance } };
-    }),
+      if (state.map.tileLayerInstance === null && layer instanceof CoordinatesLayer) {
+        return { map: { ...state.map, tileLayerInstance: layer } };
+      } else {
+        return {};
+      }
+    });
+  },
   setMapBounds: (bounds: LatLngBounds): void => set(state => ({ map: { ...state.map, bounds } })),
   setMapToGoTo: (goingTo: LatLng | null): void => set(state => ({ map: { ...state.map, goingTo } })),
   setSelectedObject: (selectedObject: EVMObject["id"] | null): void => set(() => ({ selectedObject })),
@@ -102,6 +102,11 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
     }),
   flushActiveTiles: (): void => set(state => ({ map: { ...state.map, activeTiles: new Set() } })),
   fetchBatchEvmObjects: async (tileKey: tileKey): Promise<void> => {
+    const layerInstance = get().map.tileLayerInstance;
+    if (layerInstance === null) {
+      throw new Error("Missing layer instance to compute tile coordinates");
+    }
+
     const oldIndexEntry: tileIndex =
       tileKey in get().map.evmObjectsIndex
         ? get().map.evmObjectsIndex[tileKey]
@@ -123,10 +128,6 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
       }));
     }
 
-    const layerInstance = get().map.tileLayerInstance;
-    if (layerInstance === null) {
-      throw new Error("Missing layer instance to compute tile coordinates");
-    }
     const boundsString = layerInstance.keyToBounds(tileKey).toBBoxString();
     const response = await fetch(`http://localhost:3001/objects?bounds=${boundsString}`);
     const objects: EVMObject[] = await response.json();
@@ -163,6 +164,7 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
   },
   // it's supposed to update an already known object
   fetchExtraEvmObject: async (id: EVMObject["id"]): Promise<void> => {
+    const { EvmLonLat } = await import("~~/utils/leaflet/evmWorld");
     const oldEntry =
       id in get().evmObjects ? get().evmObjects[id] : { status: { isLoading: false, isLoaded: false }, data: null };
 

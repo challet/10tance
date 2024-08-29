@@ -1,7 +1,6 @@
 import { FormEvent, FunctionComponent, useCallback, useEffect, useState } from "react";
 import { AddressInput } from "../scaffold-eth";
 import { useGlobalState } from "~~/services/store/store";
-import { EvmLonLat } from "~~/utils/leaflet/evmWorld";
 
 const GoToUserControl: FunctionComponent<{ className: string }> = ({ className = "" }) => {
   const [localGoTo, setLocalGoTo] = useState("");
@@ -16,12 +15,12 @@ const GoToUserControl: FunctionComponent<{ className: string }> = ({ className =
   }, [goingTo, setLocalGoTo]);
 
   const handleGoToAction = useCallback(
-    (event: FormEvent<HTMLFormElement>) => {
+    async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       const target = event.target as typeof event.target & {
         address: { value: string };
       };
-      setMapToGoTo(EvmLonLat.fromEvmAddress(target.address.value));
+      setMapToGoTo((await import("~~/utils/leaflet/evmWorld")).EvmLonLat.fromEvmAddress(target.address.value));
       setSelectedObject(target.address.value);
     },
     [setMapToGoTo, setSelectedObject],
