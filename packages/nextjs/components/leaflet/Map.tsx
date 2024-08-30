@@ -10,6 +10,8 @@ import { type tileKey, useGlobalState } from "~~/services/store/store";
 // copied from GridLayer._tileCoordsToKey since the instance created by the map is not easily reachable
 const tileCoordsTokey = (coords: Coords): tileKey => `${coords.x}:${coords.y}:${coords.z}`;
 
+const TILES_URL = `${process.env.NEXT_PUBLIC_TILESERVER_HOST}/tiles/{z}/{x}/{y}.png`;
+
 async function factory() {
   const { EvmTorus, ISO_ZOOM } = await import("~~/utils/leaflet/evmWorld");
   const getIcon = (await import("~~/utils/leaflet/getIcon")).default;
@@ -51,7 +53,7 @@ async function factory() {
         className="size-full"
       >
         <TileLayer
-          url="http://localhost:3001/tiles/{z}/{x}/{y}.png"
+          url={TILES_URL}
           noWrap={true}
           eventHandlers={{ tileloadstart: onTileLoad, tileunload: onTileUnload }}
         />

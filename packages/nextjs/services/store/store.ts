@@ -22,6 +22,8 @@ export type tileIndex = {
   addresses: Set<evmAddress>;
 };
 
+const API_URL = `${process.env.NEXT_PUBLIC_TILESERVER_HOST}/objects`;
+
 export type GlobalState = {
   nativeCurrency: {
     price: number;
@@ -129,7 +131,7 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
     }
 
     const boundsString = layerInstance.keyToBounds(tileKey).toBBoxString();
-    const response = await fetch(`http://localhost:3001/objects?bounds=${boundsString}`);
+    const response = await fetch(`${API_URL}?bounds=${boundsString}`);
     const objects: EVMObject[] = await response.json();
 
     set(state => {
