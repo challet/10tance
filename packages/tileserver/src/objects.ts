@@ -1,9 +1,8 @@
 import { Request, Response } from "express";
-import { Op } from "sequelize";
-import { initDb, initModel } from '../../common/sequelize/index.ts';
+import { Op, Sequelize } from "sequelize";
+import { initDb, initModel } from './sequelize/index';
 
-const routeFactory = async () => {
-  const db = await initDb();
+const routeFactory = async (db:Sequelize) => {
   const EVMObject = initModel(db);
 
   return async (req: Request, res: Response) => {
@@ -13,7 +12,7 @@ const routeFactory = async () => {
     const boundsMatches = (typeof req.query.bounds === "string") 
       ? req.query.bounds.match(/^(-?\d+\.?\d*),(-?\d+\.?\d*),(-?\d+\.?\d*),(-?\d+\.?\d*)$/)
       : null;
-    let boundsPolygon = null;
+    let boundsPolygon: string | null =null;
     if( boundsMatches != null ) {
       const [glob, east, south, west, north] = boundsMatches;
       boundsPolygon = `POLYGON((${east} ${south}, ${east} ${north}, ${west} ${north}, ${west} ${south}, ${east} ${south}))`

@@ -1,5 +1,6 @@
 import defaultIcon from "../../public/question-mark-circle.svg";
-import { Icon, PointTuple } from "leaflet";
+import type { PointTuple } from "leaflet";
+import { Icon } from "leaflet";
 
 const DEFAULT_OPTIONS = {
   iconSize: [21, 21] as PointTuple,
