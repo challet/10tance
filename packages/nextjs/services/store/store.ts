@@ -50,6 +50,7 @@ export type GlobalState = {
   setSelectedObject: (selectedObject: EVMObject["id"] | null) => void;
   addActiveTile: (tile: tileKey) => void;
   removeActiveTile: (tile: tileKey) => void;
+  setIndexEntry: (tileKey: tileKey, status?: Partial<tileIndex["status"]>, addresses?: tileIndex["addresses"]) => void;
   flushActiveTiles: () => void;
   fetchBatchEvmObjects: (tileKey: tileKey) => void;
   fetchExtraEvmObject: (object: EVMObject["id"]) => void;
@@ -102,6 +103,32 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
       nextSet.delete(tile); // Unlike add, delete doesn't return the set
       return { map: { ...state.map, activeTiles: nextSet } };
     }),
+  setIndexEntry: (
+    tileKey: tileKey,
+    status: Partial<tileIndex["status"]> = {},
+    addresses?: tileIndex["addresses"],
+  ): void =>
+    set(state => {
+      const oldIndexEntry: tileIndex =
+        tileKey in get().map.evmObjectsIndex
+          ? get().map.evmObjectsIndex[tileKey]
+          : { status: { isLoading: false, isLoaded: false }, addresses: new Set() };
+
+      const newIndexEntry = {
+        addresses: addresses === undefined ? oldIndexEntry.addresses : addresses,
+        status: { ...oldIndexEntry.status, ...status },
+      };
+
+      return {
+        map: {
+          ...state.map,
+          evmObjectsIndex: {
+            ...state.map.evmObjectsIndex,
+            [tileKey]: newIndexEntry,
+          },
+        },
+      };
+    }),
   flushActiveTiles: (): void => set(state => ({ map: { ...state.map, activeTiles: new Set() } })),
   fetchBatchEvmObjects: async (tileKey: tileKey): Promise<void> => {
     const layerInstance = get().map.tileLayerInstance;
@@ -109,60 +136,52 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
       throw new Error("Missing layer instance to compute tile coordinates");
     }
 
-    const oldIndexEntry: tileIndex =
+    const oldIndexEntryStatus: loadStatus =
       tileKey in get().map.evmObjectsIndex
-        ? get().map.evmObjectsIndex[tileKey]
-        : { status: { isLoading: false, isLoaded: false }, addresses: new Set() };
+        ? get().map.evmObjectsIndex[tileKey].status
+        : { isLoading: false, isLoaded: false };
 
-    if (oldIndexEntry.status.isLoaded || oldIndexEntry.status.isLoading) {
+    if (oldIndexEntryStatus.isLoaded || oldIndexEntryStatus.isLoading) {
       // do nothing if already loaded or being loaded
       return;
     } else {
       // flag the entry as being loaded
-      set(state => ({
-        map: {
-          ...state.map,
-          evmObjectsIndex: {
-            ...state.map.evmObjectsIndex,
-            [tileKey]: { ...oldIndexEntry, status: { ...oldIndexEntry.status, isLoading: true } },
-          },
-        },
-      }));
+      get().setIndexEntry(tileKey, { isLoading: true });
     }
 
-    const boundsString = layerInstance.keyToBounds(tileKey).toBBoxString();
-    const response = await fetch(`${API_URL}?bounds=${boundsString}`);
-    const objects: EVMObject[] = await response.json();
+    try {
+      const boundsString = layerInstance.keyToBounds(tileKey).toBBoxString();
+      const response = await fetch(`${API_URL}?bounds=${boundsString}`);
+      const objects: EVMObject[] = await response.json();
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
 
-    set(state => {
       // create a partial record with incoming data
+      const knownObjects = get().evmObjects;
       const newObjectsPartialRecord: EVMObjectRecord = Object.fromEntries(
         objects.map(newObject => {
           let oldEntry, status;
-          if (newObject.id in state.evmObjects) {
-            oldEntry = state.evmObjects[newObject.id].data;
-            status = state.evmObjects[newObject.id].status;
+          if (newObject.id in knownObjects) {
+            oldEntry = knownObjects[newObject.id].data;
+            status = knownObjects[newObject.id].status;
           } else {
             oldEntry = {};
             // status here refers to the extra data fetched from the fetchExtraEvmObject action
             status = { isLoaded: false, isLoading: false };
           }
-          // create or update if it is already known
           return [newObject.id, { status, data: { ...oldEntry, ...newObject } }];
         }),
       );
 
+      // add it to the store record
+      set(state => ({ evmObjects: { ...state.evmObjects, ...newObjectsPartialRecord } }));
       // also record them in the index
-      const newIndexEntry = {
-        status: { isLoaded: true, isLoading: false },
-        addresses: state.map.evmObjectsIndex[tileKey].addresses.union(new Set(Object.keys(newObjectsPartialRecord))),
-      };
-
-      return {
-        evmObjects: { ...state.evmObjects, ...newObjectsPartialRecord },
-        map: { ...state.map, evmObjectsIndex: { ...state.map.evmObjectsIndex, [tileKey]: newIndexEntry } },
-      };
-    });
+      get().setIndexEntry(tileKey, { isLoaded: true, isLoading: false }, new Set(Object.keys(newObjectsPartialRecord)));
+    } catch (e) {
+      console.error(`Can't load evm objects on tile ${tileKey} : ${(e as Error).message}`);
+      get().setIndexEntry(tileKey, { isLoading: false });
+    }
   },
   // it's supposed to update an already known object
   fetchExtraEvmObject: async (id: EVMObject["id"]): Promise<void> => {
