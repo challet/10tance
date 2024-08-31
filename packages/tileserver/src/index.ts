@@ -11,7 +11,7 @@ const port = process.env.PORT || 3001;
 
 app.use(cors())
 
-initDb()
+const promise_app = initDb()
   .then(db => Promise.all([
     tilesRouteFactory(),
     objectsRouteFactory(db)
@@ -23,5 +23,7 @@ initDb()
     app.listen(port, async () => {  
       console.log(`[server]: Server is running at http://localhost:${port}`);
     });
+    return app;
   });
 
+module.exports = promise_app;
