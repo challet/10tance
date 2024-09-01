@@ -13,7 +13,7 @@ const CONFIG_BASE: Options = {
     max: 2,
     min: 0,
     idle: 0,
-    acquire: 5000,
+    acquire: 14000,
     evict: 1000
   }
 };
