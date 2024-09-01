@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import querystring from 'querystring';
 import { Sequelize } from 'sequelize';
-import { initDb, initModel } from '../../common/sequelize/index';
-import computeLocation from '../../common/leaflet/EvmLocation';
+import { initDb, initModel } from 'common/sequelize';
+import { computeLocation } from 'common/leaflet';
 
 (async () => {
   const db = await initDb();
