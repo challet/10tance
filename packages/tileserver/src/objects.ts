@@ -1,9 +1,8 @@
 import { Request, Response } from "express";
-import { Op } from "sequelize";
-import { initDb, initModel } from '../../common/sequelize/index.ts';
+import { Op, Sequelize } from "sequelize";
+import { initModel } from 'common/sequelize';
 
-const routeFactory = async () => {
-  const db = await initDb();
+const routeFactory = async (db:Sequelize) => {
   const EVMObject = initModel(db);
 
   return async (req: Request, res: Response) => {
@@ -13,7 +12,7 @@ const routeFactory = async () => {
     const boundsMatches = (typeof req.query.bounds === "string") 
       ? req.query.bounds.match(/^(-?\d+\.?\d*),(-?\d+\.?\d*),(-?\d+\.?\d*),(-?\d+\.?\d*)$/)
       : null;
-    let boundsPolygon = null;
+    let boundsPolygon: string | null =null;
     if( boundsMatches != null ) {
       const [glob, east, south, west, north] = boundsMatches;
       boundsPolygon = `POLYGON((${east} ${south}, ${east} ${north}, ${west} ${north}, ${west} ${south}, ${east} ${south}))`
@@ -24,7 +23,7 @@ const routeFactory = async () => {
         // TODO inpect why the binary data cannot be raw fetched
         // without the convert_from, it looks like something (postgre, sequelize ?) is converting it to integer representation
         [db.fn('convert_from', db.col('id'), 'utf8'), 'id'],
-        'latlng',
+        [db.literal('latlng::POINT'), 'latlng'],
         'meta'
       ],
       order: [
@@ -33,11 +32,12 @@ const routeFactory = async () => {
       ],
       where: {
         [Op.and]: [
-          db.literal(`ST_Within(latlng::geometry, ST_GeomFromText('${boundsPolygon}'))`)
+          db.literal(`ST_CoveredBy(latlng, ST_GeomFromText('${boundsPolygon}'))`)
         ],
       },
       limit: 30
     });
+
     res.json(data.map((d) => {
       return {
         id: d.id,

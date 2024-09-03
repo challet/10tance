@@ -1,8 +1,7 @@
-import Jimp, { Font } from "jimp";
+import Jimp from "jimp";
 import { Request, Response } from "express";
 
 const routeFactory = async () => {
-  const font = await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK);
 
   return async (req: Request, res: Response) => {
     const {x, y, z}  = {
@@ -12,8 +11,6 @@ const routeFactory = async () => {
     };
   
     let image = new Jimp(256, 256, ((x + y) % 2) == 0 ? '#d7ffc9' : '#ffcbb9');
-  
-    image.print(font, 0, 0, `${x}\n${y}\n${z}`);
   
     res.set("Content-Type", Jimp.MIME_PNG);
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);

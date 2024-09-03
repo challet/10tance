@@ -32,6 +32,7 @@
     "tiles:start": "yarn workspace @10tance/tileserver start",
     "tiles:build": "yarn workspace @10tance/tileserver build",
     "tiles:serve": "yarn workspace @10tance/tileserver serve",
+    "tiles:vercel": "yarn workspace @10tance/tileserver vercel",
     "postinstall": "husky install",
     "precommit": "lint-staged",
     "format": "yarn next:format && yarn foundry:format"

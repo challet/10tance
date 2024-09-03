@@ -1,13 +1,11 @@
 "use client";
 
-import computeLocation from "../../../common/leaflet/EvmLocation";
+import { computeLocation } from "common/leaflet";
 import {
   Bounds,
   CRS,
-  Coords,
   DomUtil,
   GridLayer,
-  GridLayerOptions,
   LatLng,
   LatLngBounds,
   Point,
@@ -15,7 +13,8 @@ import {
   Util,
   transformation,
 } from "leaflet";
-import { tileKey } from "~~/services/store/store";
+import type { Coords, GridLayerOptions } from "leaflet";
+import type { tileKey } from "~~/services/store/store";
 
 // The native Javascript min and max integers are respectively -(2^53 – 1) and (2^53 – 1)
 // None map computations should result in over or underflow

@@ -1,30 +1,33 @@
+import dynamic from "next/dynamic";
 import {
-  LayerProps,
+  type LayerProps,
   createElementObject,
   createTileLayerComponent,
   updateGridLayer,
   withPane,
 } from "@react-leaflet/core";
-import { CRS, GridLayerOptions } from "leaflet";
-import {
-  CoordinatesLayerMode,
-  CoordinatesLayerType,
-  CoordinatesLayer as LeafletCoordinatesLayer,
-} from "~~/utils/leaflet/evmWorld";
+import type { CRS, GridLayerOptions } from "leaflet";
+import { type CoordinatesLayerMode, type CoordinatesLayerType } from "~~/utils/leaflet/evmWorld";
 
 export interface CoordinatesLayerProps extends GridLayerOptions, LayerProps {
   crs: CRS;
   mode: CoordinatesLayerMode;
 }
 
-const CoordinatesLayer = createTileLayerComponent<CoordinatesLayerType, CoordinatesLayerProps>(
-  function createTileLayer({ crs, mode, ...options }, context) {
-    const layer = new LeafletCoordinatesLayer(crs, mode, withPane(options, context));
-    return createElementObject<CoordinatesLayerType>(layer, context);
-  },
-  function updateTileLayer(layer, props, prevProps) {
-    updateGridLayer(layer, props, prevProps);
-  },
-);
+async function factory() {
+  const { CoordinatesLayer: LeafletCoordinatesLayer } = await import("~~/utils/leaflet/evmWorld");
 
-export default CoordinatesLayer;
+  const CoordinatesLayer = createTileLayerComponent<CoordinatesLayerType, CoordinatesLayerProps>(
+    function createTileLayer({ crs, mode, ...options }, context) {
+      const layer = new LeafletCoordinatesLayer(crs, mode, withPane(options, context));
+      return createElementObject<CoordinatesLayerType>(layer, context);
+    },
+    function updateTileLayer(layer, props, prevProps) {
+      updateGridLayer(layer, props, prevProps);
+    },
+  );
+
+  return CoordinatesLayer;
+}
+
+export default dynamic(factory, { ssr: false });
