@@ -4,7 +4,7 @@ import cors from "cors";
 
 import tilesRouteFactory from './tiles';
 import objectsRouteFactory from './objects';
-import { initDb } from 'common/sequelize';
+import { initDb } from './common/sequelize';
 
 const app: Express = express();
 const port = process.env.PORT || 3001;

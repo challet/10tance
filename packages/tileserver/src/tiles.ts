@@ -1,12 +1,12 @@
 import { Jimp, limit255, rgbaToInt } from "jimp";
 import { Request, Response } from "express";
-import { initModel } from 'common/sequelize';
+import { initModel } from './common/sequelize';
 import { LatLng, type Coords } from "leaflet";
 import { Sequelize, Op } from "sequelize";
 import { getColor, type RGBColor } from "colorthief";
 import { FindAttributeOptions } from "sequelize/lib/model";
+import { list, ListBlobResult, put, type PutBlobResult } from "@vercel/blob";
 import fs from "node:fs";
-
 
 // Ugly hack to be able to use leaflet withtout a browser
 // Until [this PR](https://github.com/Leaflet/Leaflet/pull/9385) makes it to a release
@@ -14,10 +14,52 @@ globalThis.window = { screen: {}} as any;
 globalThis.document = { documentElement: { style: {}}, createElement: () => ({}) } as any;
 globalThis.navigator = { userAgent: '', platform:'' } as any;
 
+const USE_BLOB_STORAGE = 'BLOB_READ_WRITE_TOKEN' in process.env;
+type file = PutBlobResult | ListBlobResult["blobs"][number] | Buffer;
+
+const getFile = async (filePath: string, fileDir: string): Promise<file | null> => {
+  if (USE_BLOB_STORAGE) {
+    // use Vercel blob storage
+    const files = await list({prefix: fileDir});
+    return files.blobs.find((file) => file.pathname == filePath) ?? null;
+  } else { 
+    // local storage
+    if (fs.existsSync(filePath)) {
+      return fs.readFileSync(filePath);
+    } else {
+      return null;
+    }
+  }
+}
+
+const saveFile = async(file: Buffer, filePath: string, fileDir: string): Promise<file> => {
+  if (USE_BLOB_STORAGE) {
+    // use Vercel blob storage
+    return await put(filePath, file, { access: 'public' });
+  } else { 
+    // local storage
+    if (!fs.existsSync(fileDir)) {
+      fs.mkdirSync(fileDir);
+    }
+    fs.writeFileSync(filePath, file);
+    return file;
+  }
+}
+
+const sendFile = (file: file, res: Response) => {
+  if (USE_BLOB_STORAGE && !(file instanceof Buffer)) {
+    res.redirect(301, file.url)
+  } else {
+    res.set("Content-Type", "image/png");
+    res.send(file);
+  }
+}
+
+
 const routeFactory = async (db: Sequelize) => {
   // They will be able to be statically imported after [this PR](https://github.com/Leaflet/Leaflet/pull/9385) makes it to a release
   const { Point, LatLng } = await import("leaflet");
-  const { CoordinatesLayer, EvmTorus } = await import("common/leaflet");
+  const { CoordinatesLayer, EvmTorus } = await import("./common/index.js");
   
   const EVMObject = initModel(db);
   const layer = new CoordinatesLayer(EvmTorus, "hex");
@@ -29,13 +71,12 @@ const routeFactory = async (db: Sequelize) => {
       z: parseInt(req.params.z)
     };
 
-    const fileDir = `${process.cwd()}/files/${z}`;
+    const fileDir = USE_BLOB_STORAGE ? `tiles/${z}` : `${process.cwd()}/files/${z}`;
     const filePath = `${fileDir}/${x}-${y}.png`;
-    let buffer: Buffer;
-    if (fs.existsSync(filePath)) {
-      buffer = fs.readFileSync(filePath);
-    } else {
-    
+
+    let file: file | null = await getFile(filePath, fileDir);
+
+    if (file === null) {
       // get the geograohic bounds of the requested tile
       const coords: Coords = new Point(x,y) as Coords;
       coords.z = z; 
@@ -142,14 +183,11 @@ const routeFactory = async (db: Sequelize) => {
       }
       
       // save it 
-      buffer = await image.getBuffer("image/png");
-      if (!fs.existsSync(fileDir)) {
-        fs.mkdirSync(fileDir);
-      }
-      fs.writeFileSync(filePath, buffer);
+      const buffer = await image.getBuffer("image/png");
+      file = await saveFile(buffer, filePath, fileDir);
     }
-    res.set("Content-Type", "image/png");
-    res.send(buffer);
+    // send it
+    sendFile(file, res);
   }
 
 }

@@ -1,3 +1,4 @@
+import L, { Coords, Map, Point } from "leaflet";
 import {
   CoordinatesLayer,
   CoordinatesLayerType,
@@ -6,8 +7,7 @@ import {
   ISO_ZOOM,
   MAX_SAFE_COORDINATES,
   MIN_SAFE_COORDINATES,
-} from "common/leaflet/evmWorld";
-import L, { Coords, Map, Point } from "leaflet";
+} from "~~/utils/leaflet/evmWorld";
 
 describe("EvmLonLat projection", () => {
   it.each([

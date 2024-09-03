@@ -19,7 +19,7 @@ const COORDINATES_LAYER_CLASSNAMES = {
 };
 
 async function factory() {
-  const { EvmTorus, ISO_ZOOM } = await import("common/leaflet/evmWorld");
+  const { EvmTorus, ISO_ZOOM } = await import("~~/utils/leaflet/evmWorld");
   const getIcon = (await import("~~/utils/leaflet/getIcon")).default;
   const { Marker, Tooltip, LayersControl, MapContainer, ScaleControl, TileLayer, useMap, useMapEvent } = await import(
     "react-leaflet"
@@ -51,7 +51,7 @@ async function factory() {
     return (
       <MapContainer
         center={[0, 0]} // immutable, it will only be used as the intial value. See <MoveTrigger /> component to handle changes
-        zoom={0}
+        zoom={2}
         minZoom={0}
         maxZoom={ISO_ZOOM}
         scrollWheelZoom={true}

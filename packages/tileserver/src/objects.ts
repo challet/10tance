@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { Op, Sequelize } from "sequelize";
-import { initModel } from 'common/sequelize';
+import { initModel } from './common/sequelize';
 
 const routeFactory = async (db:Sequelize) => {
   const EVMObject = initModel(db);

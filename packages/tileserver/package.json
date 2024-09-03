@@ -1,7 +1,6 @@
 {
   "name": "@10tance/tileserver",
   "version": "0.1.0",
-  "packageManager": "yarn@3.2.3",
   "scripts": {
     "build": "tsc --build --verbose",
     "serve": "node dist/index.js",
@@ -9,8 +8,8 @@
     "vercel": "vercel"
   },
   "dependencies": {
+    "@vercel/blob": "^0.23.4",
     "colorthief": "^2.4.0",
-    "common": "workspace:packages/common",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",

@@ -24,3 +24,6 @@ dist
 
 # dotenv
 .env
+
+# typescript
+tsconfig.tsbuildinfo

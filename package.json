@@ -2,11 +2,9 @@
   "name": "se-2",
   "version": "0.0.1",
   "private": true,
-  "workspaces": {
-    "packages": [
-      "packages/*"
-    ]
-  },
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "foundry:account": "yarn workspace @se-2/foundry account",
     "foundry:chain": "yarn workspace @se-2/foundry chain",

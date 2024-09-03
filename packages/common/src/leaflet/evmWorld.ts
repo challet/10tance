@@ -1,6 +1,6 @@
 "use client";
 
-import { computeLocation } from "common/leaflet";
+import computeLocation from "./EvmLocation";
 import {
   Bounds,
   CRS,
@@ -137,8 +137,8 @@ export type CoordinatesLayerOptions = GridLayerOptions & {
     tile?: string;
     latAxis?: string;
     lngAxis?: string;
-  }
-} 
+  };
+};
 
 export const CoordinatesLayer: new (
   crs: CRS,
@@ -149,7 +149,7 @@ export const CoordinatesLayer: new (
     this._crs = crs;
     this._mode = mode;
 
-    if(options?.classNames?.layer) {
+    if (options?.classNames?.layer) {
       options.className = options?.classNames?.layer;
     }
     // TODO forced options to be used only with the "VirtualTileLayer" hack
@@ -164,10 +164,7 @@ export const CoordinatesLayer: new (
   },
   createTile: function (coords: Coords): HTMLElement {
     // TODO move some css classes up to the pane container
-    const tile = DomUtil.create(
-      "div",
-      this.options.classNames.tile,
-    );
+    const tile = DomUtil.create("div", this.options.classNames.tile);
     const size = this.getTileSize();
     // TODO could use this.tileCoordsToBounds instead
     const northwest = this._crs.pointToLatLng(new Point(coords.x * size.x, coords.y * size.y), coords.z);
@@ -176,8 +173,10 @@ export const CoordinatesLayer: new (
       northwest.lat,
       this._mode,
     );
-    DomUtil.create("span", this.options.classNames.lngAxis, tile).textContent =
-      coordinateFormatter(northwest.lng, this._mode);
+    DomUtil.create("span", this.options.classNames.lngAxis, tile).textContent = coordinateFormatter(
+      northwest.lng,
+      this._mode,
+    );
 
     return tile;
   },
@@ -192,31 +191,31 @@ export const CoordinatesLayer: new (
   keyToBounds: function (tile: tileKey): LatLngBounds {
     return this._keyToBounds(tile);
   },
-  tileCoordsToBounds: function(coords: Coords): LatLngBounds {
+  tileCoordsToBounds: function (coords: Coords): LatLngBounds {
     return this._tileCoordsToBounds(coords);
   },
   // special version of the function to be used outside a browser where the map object annot be initialised
-  tileCoordsToBoundsWithoutAMap: function(coords: Coords): LatLngBounds {
+  tileCoordsToBoundsWithoutAMap: function (coords: Coords): LatLngBounds {
     const tileSize = this.getTileSize(),
       nwPoint = coords.scaleBy(tileSize),
       sePoint = nwPoint.add(tileSize),
       nw = this._crs.pointToLatLng(nwPoint, coords.z),
       se = this._crs.pointToLatLng(sePoint, coords.z);
-    
+
     let bounds = new LatLngBounds(nw, se);
     if (!this.options.noWrap) {
       bounds = this._crs.wrapLatLngBounds(bounds);
     }
     return bounds;
   },
-  pixelInTileToLatLng: function(tileCoords: Coords, pixel: Point): LatLng {
+  pixelInTileToLatLng: function (tileCoords: Coords, pixel: Point): LatLng {
     const nwPoint = tileCoords.scaleBy(this.getTileSize()),
       pixelInTile = nwPoint.add(pixel);
 
-    let latlng = this._crs.pointToLatLng(pixelInTile, tileCoords.z)
+    let latlng = this._crs.pointToLatLng(pixelInTile, tileCoords.z);
     if (!this.options.noWrap) {
       latlng = this._crs.wrapLatLng(latlng);
     }
     return latlng;
-  }
+  },
 });

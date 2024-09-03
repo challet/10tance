@@ -13,8 +13,12 @@
     "rootDir": "src",
     "paths": {
       "~~/*": ["./*"]
-    }
+    },
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules"]
 }
