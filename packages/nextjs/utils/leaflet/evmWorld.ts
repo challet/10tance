@@ -1,5 +1,6 @@
 "use client";
 
+import { computeLocation } from "common/leaflet";
 import {
   Bounds,
   CRS,
@@ -14,7 +15,6 @@ import {
 } from "leaflet";
 import type { Coords, GridLayerOptions } from "leaflet";
 import type { tileKey } from "~~/services/store/store";
-import computeLocation from "~~/utils/leaflet/EvmLocation";
 
 // The native Javascript min and max integers are respectively -(2^53 – 1) and (2^53 – 1)
 // None map computations should result in over or underflow

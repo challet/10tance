@@ -11,6 +11,7 @@ __metadata:
   dependencies:
     "@types/node": ^22.1.0
     "@types/pg": ^8
+    common: "workspace:packages/common"
     dotenv: ^16.4.5
     pg: ^8.12.0
     sequelize: ^6.37.3
@@ -29,6 +30,7 @@ __metadata:
     "@types/express": ^4
     "@types/node": ^22.1.0
     "@types/pg": ^8
+    common: "workspace:packages/common"
     cors: ^2.8.5
     dotenv: ^16.4.5
     express: ^4.19.2
@@ -2866,6 +2868,7 @@ __metadata:
     autoprefixer: ~10.4.12
     blo: ~1.0.1
     burner-connector: ~0.0.8
+    common: "workspace:packages/common"
     daisyui: 4.5.0
     eslint: ~8.24.0
     eslint-config-next: ~14.0.4
