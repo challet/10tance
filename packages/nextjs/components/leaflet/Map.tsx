@@ -13,7 +13,7 @@ const tileCoordsTokey = (coords: Coords): tileKey => `${coords.x}:${coords.y}:${
 const TILES_URL = `${process.env.NEXT_PUBLIC_TILESERVER_HOST}/tiles/{z}/{x}/{y}.png`;
 
 async function factory() {
-  const { EvmTorus, ISO_ZOOM } = await import("~~/utils/leaflet/evmWorld");
+  const { EvmTorus, ISO_ZOOM } = await import("common/leaflet/evmWorld");
   const getIcon = (await import("~~/utils/leaflet/getIcon")).default;
   const { Marker, Tooltip, LayersControl, MapContainer, ScaleControl, TileLayer, useMap, useMapEvent } = await import(
     "react-leaflet"
@@ -45,8 +45,8 @@ async function factory() {
     return (
       <MapContainer
         center={[0, 0]} // immutable, it will only be used as the intial value. See <MoveTrigger /> component to handle changes
-        zoom={2}
-        minZoom={1}
+        zoom={0}
+        minZoom={0}
         maxZoom={ISO_ZOOM}
         scrollWheelZoom={true}
         crs={EvmTorus}
@@ -56,7 +56,7 @@ async function factory() {
           url={TILES_URL}
           noWrap={true}
           eventHandlers={{ tileloadstart: onTileLoad, tileunload: onTileUnload }}
-          minZoom={1}
+          minZoom={0}
           maxZoom={ISO_ZOOM}
         />
         <LayersControl position="topright">
@@ -82,7 +82,7 @@ async function factory() {
     const setSelectedObject = useGlobalState(state => state.setSelectedObject);
 
     // reset states when the user moves the map
-    // it shouldn't fire on thechange through "goingTo" state below, which uses the "noMoveStart" option
+    // it shouldn't fire on the change through "goingTo" state below, which uses the "noMoveStart" option
     useMapEvent("movestart", () => {
       setMapToGoTo(null);
       setSelectedObject(null);

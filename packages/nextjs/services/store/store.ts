@@ -1,8 +1,8 @@
+import type { CoordinatesLayerType } from "common/leaflet/evmWorld";
 import type { LatLng, LatLngBounds, Layer } from "leaflet";
 import create from "zustand";
 import scaffoldConfig from "~~/scaffold.config";
 import { EVMObject, evmAddress } from "~~/types/10tance/EVMObject";
-import type { CoordinatesLayerType } from "~~/utils/leaflet/evmWorld";
 import { ChainWithAttributes } from "~~/utils/scaffold-eth";
 
 /**
@@ -80,7 +80,7 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
     activeTiles: new Set(),
   },
   setMapTileLayerInstance: async (layer: Layer): Promise<void> => {
-    const { CoordinatesLayer } = await import("~~/utils/leaflet/evmWorld");
+    const { CoordinatesLayer } = await import("common/leaflet/evmWorld");
     set(state => {
       // TODO could do better:
       // - create a specialized "virtual layer"
@@ -185,7 +185,7 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
   },
   // it's supposed to update an already known object
   fetchExtraEvmObject: async (id: EVMObject["id"]): Promise<void> => {
-    const { EvmLonLat } = await import("~~/utils/leaflet/evmWorld");
+    const { EvmLonLat } = await import("common/leaflet/evmWorld");
     const oldEntry =
       id in get().evmObjects ? get().evmObjects[id] : { status: { isLoading: false, isLoaded: false }, data: null };
 

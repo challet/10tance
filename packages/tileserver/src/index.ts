@@ -13,7 +13,7 @@ app.use(cors())
 
 const promise_app = initDb()
   .then(db => Promise.all([
-    tilesRouteFactory(),
+    tilesRouteFactory(db),
     objectsRouteFactory(db)
   ]))
   .then(([tilesRoute, objecstRoute]) => {

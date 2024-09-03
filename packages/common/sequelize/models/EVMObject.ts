@@ -16,8 +16,6 @@ interface EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttri
   }
 }
 
-console.log(Buffer.isEncoding('hex'));
-
 export default (db: Sequelize) => {
   return db.define<EVMObject>(
     'EVMObject', {

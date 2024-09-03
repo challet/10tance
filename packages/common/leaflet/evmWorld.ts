@@ -1,5 +1,3 @@
-"use client";
-
 import { computeLocation } from "common/leaflet";
 import {
   Bounds,
@@ -14,7 +12,6 @@ import {
   transformation,
 } from "leaflet";
 import type { Coords, GridLayerOptions } from "leaflet";
-import type { tileKey } from "~~/services/store/store";
 
 // The native Javascript min and max integers are respectively -(2^53 – 1) and (2^53 – 1)
 // None map computations should result in over or underflow
@@ -100,7 +97,7 @@ export const EvmTorus: CRS & { constraintsLatLngBounds: (bounds: LatLngBounds) =
   },
 );
 
-const intFormat = new Intl.NumberFormat("nu", { useGrouping: "always", signDisplay: "always" });
+const intFormat = new Intl.NumberFormat("nu", { useGrouping: true, signDisplay: "always" });
 
 const coordinateFormatter = (nb: number, mode: CoordinatesLayerMode) => {
   // Upscale to fit the actual EVM resolution
@@ -117,7 +114,7 @@ const coordinateFormatter = (nb: number, mode: CoordinatesLayerMode) => {
         .toString(16) // hexa display
         .replace(/^\-?([0-9a-f]+)$/, "$1") // remove the potential "-" at the start
         .padStart(20, "0") // pad with zeros
-        .replaceAll(/([0-9a-f]{4})/g, "$1 "), // display by group of 4
+        .replace(/([0-9a-f]{4})/g, "$1 "), // display by group of 4
     );
   }
 };
@@ -125,7 +122,11 @@ const coordinateFormatter = (nb: number, mode: CoordinatesLayerMode) => {
 export type CoordinatesLayerType = GridLayer & {
   createTile: (coords: Coords) => HTMLElement;
   keyToBounds(tile: tileKey): LatLngBounds;
+  tileCoordsToBounds(coords: Coords): LatLngBounds;
+  tileCoordsToBoundsWithoutAMap(coords: Coords): LatLngBounds;
+  pixelInTileToLatLng(tileCoords: Coords, pixel: Point): LatLng;
 };
+export type tileKey = ReturnType<CoordinatesLayerType["_tileCoordsToKey"]>;
 export type CoordinatesLayerMode = "int" | "hex";
 
 export const CoordinatesLayer: new (
@@ -136,14 +137,14 @@ export const CoordinatesLayer: new (
   initialize: function (crs: CRS, mode: CoordinatesLayerMode, options: GridLayerOptions | void = {}) {
     this._crs = crs;
     this._mode = mode;
-    // TODO force options to be used only with the "VirtualTileLayer" hack
+    // TODO forced options to be used only with the "VirtualTileLayer" hack
     options = {
       ...options,
       updateWhenZooming: false,
       updateInterval: 1000,
       noWrap: true,
     };
-    // TODO it would be better to call the super GridLayer.initialize but this custom extension system seems to break it
+    // TODO it would be better to call the super "GridLayer.initialize" but this custom leaflet "extend" function seems to break it
     Util.setOptions(this, options);
   },
   createTile: function (coords: Coords): HTMLElement {
@@ -153,6 +154,7 @@ export const CoordinatesLayer: new (
       "border-t border-l border-slate-400/50 text-slate-400/50 text-center text-[0.75em]/[1.2em] tabular-nums font-mono select-none",
     );
     const size = this.getTileSize();
+    // TODO could use this.tileCoordsToBounds instead
     const northwest = this._crs.pointToLatLng(new Point(coords.x * size.x, coords.y * size.y), coords.z);
 
     DomUtil.create("span", "absolute inset-x-0 top-0", tile).textContent = coordinateFormatter(
@@ -171,7 +173,35 @@ export const CoordinatesLayer: new (
   _retainParent: function (): void {
     return undefined; // retain no parent
   },
+  // expose private methods that can be used externally
   keyToBounds: function (tile: tileKey): LatLngBounds {
     return this._keyToBounds(tile);
   },
+  tileCoordsToBounds: function(coords: Coords): LatLngBounds {
+    return this._tileCoordsToBounds(coords);
+  },
+  // special version of the function to be used outside a browser where the map object annot be initialised
+  tileCoordsToBoundsWithoutAMap: function(coords: Coords): LatLngBounds {
+    const tileSize = this.getTileSize(),
+      nwPoint = coords.scaleBy(tileSize),
+      sePoint = nwPoint.add(tileSize),
+      nw = this._crs.pointToLatLng(nwPoint, coords.z),
+      se = this._crs.pointToLatLng(sePoint, coords.z);
+    
+    let bounds = new LatLngBounds(nw, se);
+    if (!this.options.noWrap) {
+      bounds = this._crs.wrapLatLngBounds(bounds);
+    }
+    return bounds;
+  },
+  pixelInTileToLatLng: function(tileCoords: Coords, pixel: Point): LatLng {
+    const nwPoint = tileCoords.scaleBy(this.getTileSize()),
+      pixelInTile = nwPoint.add(pixel);
+
+    let latlng = this._crs.pointToLatLng(pixelInTile, tileCoords.z)
+    if (!this.options.noWrap) {
+      latlng = this._crs.wrapLatLng(latlng);
+    }
+    return latlng;
+  }
 });

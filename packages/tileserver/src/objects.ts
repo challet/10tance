@@ -26,15 +26,15 @@ const routeFactory = async (db:Sequelize) => {
         [db.literal('latlng::POINT'), 'latlng'],
         'meta'
       ],
-      order: [
-        [db.literal("COALESCE((meta#>>'{circulating_market_cap}')::decimal(15,0), 0)"), 'DESC'],
-        [db.literal("COALESCE((meta#>>'{holders}')::decimal(15,0), 0)"), 'DESC']
-      ],
       where: {
         [Op.and]: [
           db.literal(`ST_CoveredBy(latlng, ST_GeomFromText('${boundsPolygon}'))`)
         ],
       },
+      order: [
+        [db.literal("COALESCE((meta#>>'{circulating_market_cap}')::decimal(15,0), 0)"), 'DESC'],
+        [db.literal("COALESCE((meta#>>'{holders}')::decimal(15,0), 0)"), 'DESC']
+      ],
       limit: 30
     });
 
