@@ -1,3 +1,5 @@
+"use client";
+
 import { computeLocation } from "common/leaflet";
 import {
   Bounds,
@@ -74,6 +76,7 @@ export const EvmTorus: CRS & { constraintsLatLngBounds: (bounds: LatLngBounds) =
 
     // Same as CRS.wrapLatLngBounds but doesn't keep the same size as the given one
     // Useful for getting the visible bounds constrained into the CRS
+    // TODO is it still used somewhere ?
     constraintsLatLngBounds(bounds: LatLngBounds): LatLngBounds | null {
       if (!bounds.intersects(WORLD_BOUNDS)) {
         return null;
@@ -128,15 +131,27 @@ export type CoordinatesLayerType = GridLayer & {
 };
 export type tileKey = ReturnType<CoordinatesLayerType["_tileCoordsToKey"]>;
 export type CoordinatesLayerMode = "int" | "hex";
+export type CoordinatesLayerOptions = GridLayerOptions & {
+  classNames?: {
+    layer?: string;
+    tile?: string;
+    latAxis?: string;
+    lngAxis?: string;
+  }
+} 
 
 export const CoordinatesLayer: new (
   crs: CRS,
   mode: CoordinatesLayerMode,
-  options: GridLayerOptions | void,
+  options: CoordinatesLayerOptions | void,
 ) => CoordinatesLayerType = GridLayer.extend({
-  initialize: function (crs: CRS, mode: CoordinatesLayerMode, options: GridLayerOptions | void = {}) {
+  initialize: function (crs: CRS, mode: CoordinatesLayerMode, options: CoordinatesLayerOptions | void = {}) {
     this._crs = crs;
     this._mode = mode;
+
+    if(options?.classNames?.layer) {
+      options.className = options?.classNames?.layer;
+    }
     // TODO forced options to be used only with the "VirtualTileLayer" hack
     options = {
       ...options,
@@ -148,20 +163,20 @@ export const CoordinatesLayer: new (
     Util.setOptions(this, options);
   },
   createTile: function (coords: Coords): HTMLElement {
-    // TODO move the css classes up to the pane container
+    // TODO move some css classes up to the pane container
     const tile = DomUtil.create(
       "div",
-      "border-t border-l border-slate-400/50 text-slate-400/50 text-center text-[0.75em]/[1.2em] tabular-nums font-mono select-none",
+      this.options.classNames.tile,
     );
     const size = this.getTileSize();
     // TODO could use this.tileCoordsToBounds instead
     const northwest = this._crs.pointToLatLng(new Point(coords.x * size.x, coords.y * size.y), coords.z);
 
-    DomUtil.create("span", "absolute inset-x-0 top-0", tile).textContent = coordinateFormatter(
+    DomUtil.create("span", this.options.classNames.latAxis, tile).textContent = coordinateFormatter(
       northwest.lat,
       this._mode,
     );
-    DomUtil.create("span", "absolute inset-y-0 left-0 [writing-mode:sideways-lr]", tile).textContent =
+    DomUtil.create("span", this.options.classNames.lngAxis, tile).textContent =
       coordinateFormatter(northwest.lng, this._mode);
 
     return tile;
