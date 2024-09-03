@@ -18,7 +18,6 @@ const routeFactory = async (db: Sequelize) => {
   // They will be able to be statically imported after [this PR](https://github.com/Leaflet/Leaflet/pull/9385) makes it to a release
   const { Point, LatLng } = await import("leaflet");
   const { CoordinatesLayer, EvmTorus } = await import("common/leaflet");
-  const { MAX_SAFE_COORDINATES } = await import("common/leaflet");
   
   const EVMObject = initModel(db);
   const layer = new CoordinatesLayer(EvmTorus, "hex");

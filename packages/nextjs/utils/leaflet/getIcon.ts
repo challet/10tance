@@ -5,12 +5,13 @@ import { Icon } from "leaflet";
 const DEFAULT_OPTIONS = {
   iconSize: [21, 21] as PointTuple,
   iconAnchor: [11, 11] as PointTuple,
+  className: "bg-slate-300/[.55] rounded-full",
 };
 
 const HIGHLIHGTEHD_OPTIONS = {
   iconSize: [49, 49] as PointTuple,
   iconAnchor: [25, 25] as PointTuple,
-  className: "bg-purple-600/[.55] border-8 rounded-full border-transparent shadow-md shadow-purple-600/[.55]",
+  className: "bg-slate-300/[.7] border-8 rounded-full border-transparent shadow-md shadow-slate-300/[.7]",
 };
 
 // global cache avoiding to recreate the Icon each time
