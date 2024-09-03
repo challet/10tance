@@ -11,6 +11,12 @@ import { type tileKey, useGlobalState } from "~~/services/store/store";
 const tileCoordsTokey = (coords: Coords): tileKey => `${coords.x}:${coords.y}:${coords.z}`;
 
 const TILES_URL = `${process.env.NEXT_PUBLIC_TILESERVER_HOST}/tiles/{z}/{x}/{y}.png`;
+const COORDINATES_LAYER_CLASSNAMES = {
+  layer: "text-slate-400/80 text-center text-[0.7em]/[1.2em] tabular-nums font-mono select-none",
+  tile: "border-t border-l border-slate-400/50",
+  latAxis: "absolute inset-x-0 top-0",
+  lngAxis: "absolute inset-y-0 left-0 [writing-mode:sideways-lr]",
+};
 
 async function factory() {
   const { EvmTorus, ISO_ZOOM } = await import("~~/utils/leaflet/evmWorld");
@@ -46,7 +52,7 @@ async function factory() {
       <MapContainer
         center={[0, 0]} // immutable, it will only be used as the intial value. See <MoveTrigger /> component to handle changes
         zoom={2}
-        minZoom={1}
+        minZoom={0}
         maxZoom={ISO_ZOOM}
         scrollWheelZoom={true}
         crs={EvmTorus}
@@ -56,13 +62,26 @@ async function factory() {
           url={TILES_URL}
           noWrap={true}
           eventHandlers={{ tileloadstart: onTileLoad, tileunload: onTileUnload }}
+          minZoom={0}
+          maxZoom={ISO_ZOOM}
         />
         <LayersControl position="topright">
           <LayersControl.BaseLayer name="Integer coordinates" checked={false}>
-            <CoordinatesLayerComponent crs={EvmTorus} noWrap={false} mode="int" />
+            <CoordinatesLayerComponent
+              crs={EvmTorus}
+              noWrap={false}
+              mode="int"
+              classNames={COORDINATES_LAYER_CLASSNAMES}
+            />
           </LayersControl.BaseLayer>
           <LayersControl.BaseLayer name="Hexadecimal coordinates" checked={true}>
-            <CoordinatesLayerComponent crs={EvmTorus} noWrap={false} mode="hex" eventHandlers={{ add: onLayerAdded }} />
+            <CoordinatesLayerComponent
+              crs={EvmTorus}
+              noWrap={false}
+              mode="hex"
+              classNames={COORDINATES_LAYER_CLASSNAMES}
+              eventHandlers={{ add: onLayerAdded }}
+            />
           </LayersControl.BaseLayer>
         </LayersControl>
         <ScaleControl />
@@ -80,7 +99,7 @@ async function factory() {
     const setSelectedObject = useGlobalState(state => state.setSelectedObject);
 
     // reset states when the user moves the map
-    // it shouldn't fire on thechange through "goingTo" state below, which uses the "noMoveStart" option
+    // it shouldn't fire on the change through "goingTo" state below, which uses the "noMoveStart" option
     useMapEvent("movestart", () => {
       setMapToGoTo(null);
       setSelectedObject(null);
@@ -96,13 +115,6 @@ async function factory() {
 
   // load objects and display them
   const EvmMarkers: FunctionComponent = () => {
-    /*
-    const setMapTileLayerInstance = useGlobalState(state => state.setMapTileLayerInstance);
-    useMapEvent("layeradd", (event) => {
-      console.log(event);
-      setMapTileLayerInstance(event.layer);
-    });
-    */
     const data = useRetrieveDisplayedObjects();
     const selectedObjectId = useGlobalState(state => state.selectedObject);
     const setSelectedObject = useGlobalState(state => state.setSelectedObject);
@@ -124,6 +136,7 @@ async function factory() {
         data-data={d.id}
         eventHandlers={eventHandlers}
         zIndexOffset={d.id === selectedObjectId ? 1000 : 0}
+        autoPanOnFocus={false}
       >
         <Tooltip>{d.symbol}</Tooltip>
       </Marker>

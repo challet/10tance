@@ -6,10 +6,10 @@ import {
   updateGridLayer,
   withPane,
 } from "@react-leaflet/core";
-import type { CRS, GridLayerOptions } from "leaflet";
-import { type CoordinatesLayerMode, type CoordinatesLayerType } from "~~/utils/leaflet/evmWorld";
+import type { CRS } from "leaflet";
+import type { CoordinatesLayerMode, CoordinatesLayerOptions, CoordinatesLayerType } from "~~/utils/leaflet/evmWorld";
 
-export interface CoordinatesLayerProps extends GridLayerOptions, LayerProps {
+export interface CoordinatesLayerProps extends CoordinatesLayerOptions, LayerProps {
   crs: CRS;
   mode: CoordinatesLayerMode;
 }

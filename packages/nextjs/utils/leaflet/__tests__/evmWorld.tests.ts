@@ -1,3 +1,4 @@
+import L, { Coords, Map, Point } from "leaflet";
 import {
   CoordinatesLayer,
   CoordinatesLayerType,
@@ -6,8 +7,7 @@ import {
   ISO_ZOOM,
   MAX_SAFE_COORDINATES,
   MIN_SAFE_COORDINATES,
-} from "../evmWorld";
-import L, { Coords, Map, Point } from "leaflet";
+} from "~~/utils/leaflet/evmWorld";
 
 describe("EvmLonLat projection", () => {
   it.each([
@@ -196,6 +196,43 @@ describe.each(["int", "hex"])("CoordinatesLayer in '%s' mode", mode => {
         // hex
         expect(tile.childNodes[0].textContent?.replaceAll(" ", "")).toBe(hex[0].replace("0x", "Ox"));
         expect(tile.childNodes[1].textContent?.replaceAll(" ", "")).toBe(hex[1].replace("0x", "Ox"));
+      }
+    });
+  });
+});
+
+describe("CoordinatesLayer utility methods", () => {
+  let layer: CoordinatesLayerType;
+  beforeAll(() => {
+    layer = new CoordinatesLayer(EvmTorus, "hex");
+  });
+
+  describe("pixelInTileToLatLng", () => {
+    it("Projects the location of each pixel from the outermost tile", () => {
+      const tile: Coords = new Point(0, 0) as Coords;
+      tile.z = 0;
+
+      const pixelStep = (MAX_SAFE_COORDINATES - MIN_SAFE_COORDINATES) / 256;
+      for (let x = 0; x < 256; x++) {
+        for (let y = 0; y < 256; y++) {
+          const latlng = layer.pixelInTileToLatLng(tile, new Point(x, y));
+          expect(latlng.lat).toBe(MAX_SAFE_COORDINATES - y * pixelStep);
+          expect(latlng.lng).toBe(MIN_SAFE_COORDINATES + x * pixelStep);
+        }
+      }
+    });
+
+    it("Projects the location of the pixel from one of the innermost tiles", () => {
+      const tile: Coords = new Point(0, 0) as Coords;
+      tile.z = ISO_ZOOM;
+
+      const pixelStep = 1;
+      for (let x = 0; x < 256; x++) {
+        for (let y = 0; y < 256; y++) {
+          const latlng = layer.pixelInTileToLatLng(tile, new Point(x, y));
+          expect(latlng.lat).toBe(MAX_SAFE_COORDINATES - y * pixelStep);
+          expect(latlng.lng).toBe(MIN_SAFE_COORDINATES + x * pixelStep);
+        }
       }
     });
   });
