@@ -52,4 +52,4 @@ const tileBasedMiddlewareFactory = async() => {
   };
 };
 
-export default tileBasedMiddlewareFactory ;
+export default tileBasedMiddlewareFactory;

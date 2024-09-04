@@ -22,7 +22,7 @@ const createImage = async (tileCoords: Coords, influencers: pixelInfluencer[], M
   
   const layer = new CoordinatesLayer(EvmTorus, "hex");
 
-  const image = new Jimp({ width: 256, height: 256, color:'#ffffffff' });
+  const image = new Jimp({ width: 256, height: 256, color:'#888888ff' });
   for(let x = 0; x < 256; x++) {
     for(let y = 0; y < 256; y++) {
       const pixelLocation = layer.pixelInTileToLatLng(tileCoords, new Point(x,y));
