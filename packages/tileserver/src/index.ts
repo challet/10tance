@@ -1,29 +1,28 @@
 import 'dotenv/config';
-import express, { Express } from "express";
+import express, { Express, Request } from "express";
 import cors from "cors";
 
-import tilesRouteFactory from './tiles';
-import objectsRouteFactory from './objects';
-import { initDb } from './common/sequelize';
+import {tilesRoute, objectsRoute, tileBasedMiddlewareFactory} from './routes';
 
 const app: Express = express();
 const port = process.env.PORT || 3001;
 
-app.use(cors())
+app.use(cors());
 
-const promise_app = initDb()
-  .then(db => Promise.all([
-    tilesRouteFactory(db),
-    objectsRouteFactory(db)
-  ]))
-  .then(([tilesRoute, objecstRoute]) => {
-    app.get("/tiles/:z/:x/:y", tilesRoute);
-    app.get("/objects", objecstRoute);
+const promise_app = tileBasedMiddlewareFactory()
+  .then((tileBasedMiddleware) => {
+    app.get("/tiles/:x\::y\::z", tileBasedMiddleware, tilesRoute);
+    app.get("/objects/:x\::y\::z", tileBasedMiddleware, objectsRoute);
 
     app.listen(port, async () => {  
       console.log(`[server]: Server is running at http://localhost:${port}`);
     });
     return app;
   });
+
+process.on("exit", () => {
+  // TODO close db;
+})
+
 
 module.exports = promise_app;

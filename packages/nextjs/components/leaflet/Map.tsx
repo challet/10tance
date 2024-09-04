@@ -10,7 +10,7 @@ import { type tileKey, useGlobalState } from "~~/services/store/store";
 // copied from GridLayer._tileCoordsToKey since the instance created by the map is not easily reachable
 const tileCoordsTokey = (coords: Coords): tileKey => `${coords.x}:${coords.y}:${coords.z}`;
 
-const TILES_URL = `${process.env.NEXT_PUBLIC_TILESERVER_HOST}/tiles/{z}/{x}/{y}.png`;
+const TILES_URL = `${process.env.NEXT_PUBLIC_TILESERVER_HOST}/tiles/{x}:{y}:{z}`;
 const COORDINATES_LAYER_CLASSNAMES = {
   layer: "text-slate-400/80 text-center text-[0.7em]/[1.2em] tabular-nums font-mono select-none",
   tile: "border-t border-l border-slate-400/50",
