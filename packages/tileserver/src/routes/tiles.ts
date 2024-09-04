@@ -1,25 +1,16 @@
-import { Jimp, limit255, rgbaToInt } from "jimp";
 import { Request, Response } from "express";
 import initDb from '../common/sequelize';
-import { LatLng, type Coords } from "leaflet";
-import { Sequelize, Op, type Model, type FindAttributeOptions, type ModelCtor  } from "sequelize";
-import { getColor, type RGBColor } from "colorthief";
+import { Op, type FindAttributeOptions, type ModelCtor  } from "sequelize";
+import { getColor } from "colorthief";
 import { getFile, saveFile, sendFile, USE_BLOB_STORAGE, type fileType } from "../services/files";
-import EVMObject, { EVMObject as EVMObjectType } from "../common/sequelize/models/EVMObject";
+import { EVMObject as EVMObjectType } from "../common/sequelize/models/EVMObject";
+import createImage, { type pixelInfluencer } from "../services/image";
 
-// Ugly hack to be able to use leaflet withtout a browser
-// Until [this PR](https://github.com/Leaflet/Leaflet/pull/9385) makes it to a release
-globalThis.window = { screen: {}} as any;
-globalThis.document = { documentElement: { style: {}}, createElement: () => ({}) } as any;
-globalThis.navigator = { userAgent: '', platform:'' } as any;
+
 
 const routeFactory = async () => {
-  // They will be able to be statically imported after [this PR](https://github.com/Leaflet/Leaflet/pull/9385) makes it to a release
-  const { Point, LatLng } = await import("leaflet");
-  const { CoordinatesLayer, EvmTorus } = await import("../common/index.js");
   
-  const layer = new CoordinatesLayer(EvmTorus, "hex");
-
+  
   return async (req: Request, res: Response) => {
     const { x, y, z } = res.locals.tile.coords;
     const fileDir = USE_BLOB_STORAGE ? `tiles/${z}` : `${process.cwd()}/files/${z}`;
@@ -84,8 +75,9 @@ const routeFactory = async () => {
       const data = innerTileData.concat(outerTileData) as EVMObjectType[];
       
       // prepare the data
-      const influencers = await Promise.all(data.map(async (d): Promise<{color: RGBColor, latlng: LatLng, rawStrength: number}> => {
+      const influencers = await Promise.all(data.map(async (d): Promise<pixelInfluencer> => {
         let color;
+        // TODO color pickcing could be done once and stored in the db
         try {
           color = await getColor(d.meta.icon_url!);
         } catch(e) {
@@ -93,46 +85,17 @@ const routeFactory = async () => {
           color = null;
         }
         return {
-          color: color ?? [255,255,255],
-          latlng: new LatLng(d.latlng.y, d.latlng.x),
+          color: color != null ? { r: color[0], g: color[1], b: color[2] } : { r: 255, g: 255, b: 255 },
+          latlng: {lat: d.latlng.y, lng: d.latlng.y},
           rawStrength: d.meta.circulating_market_cap!
         };
       }));
 
       //create the image
-      const image = new Jimp({ width: 256, height: 256, color:'#ffffffff' });
-      for(let x = 0; x < 256; x++) {
-        for(let y = 0; y < 256; y++) {
-          const pixelLocation = layer.pixelInTileToLatLng(res.locals.tile.coords, new Point(x,y));
-          const pixelColorParameters = influencers.reduce((pixelColor, influencer: typeof influencers[number]) => {
-            const distance = EvmTorus.distance(influencer.latlng, pixelLocation);
-            const strength = Math.log(influencer.rawStrength) / distance;
-
-            if (strength > MIN_STRENGTH) {
-              return {
-                r: pixelColor.r + strength * influencer.color[0],
-                g: pixelColor.g + strength * influencer.color[1],
-                b: pixelColor.b + strength * influencer.color[2],
-                totalStrength: pixelColor.totalStrength + strength
-              }
-            } else {
-              return pixelColor;
-            }
-          }, { r: 0, g: 0, b: 0, totalStrength: 0});
-
-          const pixelColor = {
-            r: pixelColorParameters.r / pixelColorParameters.totalStrength,
-            g: pixelColorParameters.g / pixelColorParameters.totalStrength,
-            b: pixelColorParameters.b / pixelColorParameters.totalStrength
-          }
-
-          image.setPixelColor(rgbaToInt(limit255(pixelColor.r), limit255(pixelColor.g), limit255(pixelColor.b), 255), x, y);
-        }
-      }
+      const image = await createImage(res.locals.tile.coords, influencers, MIN_STRENGTH);
       
       // save it 
-      const buffer = await image.getBuffer("image/png");
-      file = await saveFile(buffer, filePath, fileDir);
+      file = await saveFile(await image.getBuffer("image/png"), filePath, fileDir);
     }
     // send it
     sendFile(file, res);

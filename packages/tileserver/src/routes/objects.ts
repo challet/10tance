@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Op, Sequelize } from "sequelize";
+import { Op } from "sequelize";
 import initDb from '../common/sequelize';
 import { EVMObject } from "../common/sequelize/models/EVMObject";
 
