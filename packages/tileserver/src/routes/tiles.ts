@@ -21,12 +21,7 @@ const routeFactory = async () => {
   const layer = new CoordinatesLayer(EvmTorus, "hex");
 
   return async (req: Request, res: Response) => {
-    const {x, y, z}  = {
-      x: parseInt(req.params.x),
-      y: parseInt(req.params.y),
-      z: parseInt(req.params.z)
-    };
-
+    const { x, y, z } = res.locals.tile.coords;
     const fileDir = USE_BLOB_STORAGE ? `tiles/${z}` : `${process.cwd()}/files/${z}`;
     const filePath = `${fileDir}/${x}-${y}.png`;
 
@@ -35,11 +30,6 @@ const routeFactory = async () => {
     if (file === null) {
       const db = await initDb();
       const EVMObject = db.models.EVMObject;
-      // get the geograohic bounds of the requested tile
-      const coords: Coords = new Point(x,y) as Coords;
-      coords.z = z; 
-      const bounds = layer.tileCoordsToBoundsWithoutAMap(coords);
-      const tileGeom = `POLYGON((${bounds.getEast()} ${bounds.getSouth()}, ${bounds.getEast()} ${bounds.getNorth()}, ${bounds.getWest()} ${bounds.getNorth()}, ${bounds.getWest()} ${bounds.getSouth()}, ${bounds.getEast()} ${bounds.getSouth()}))`;
 
       const MIN_STRENGTH = 1 / Math.pow(2, 46);
 
@@ -68,7 +58,7 @@ const routeFactory = async () => {
         order: [
           [db.literal("(meta->>'circulating_market_cap')::float"), "DESC"]
         ],
-        bind: { tileGeom },
+        bind: { tileGeom: res.locals.tile.geom },
         limit: 30
       });
 
@@ -86,7 +76,7 @@ const routeFactory = async () => {
         order: [
           [db.literal("LOG((meta->>'circulating_market_cap')::float) / ST_Distance(latlng, ST_GeomFromText($tileGeom))"), "DESC"]
         ],
-        bind: { tileGeom, MIN_STRENGTH },
+        bind: { tileGeom: res.locals.tile.geom, MIN_STRENGTH },
         limit: 150
       });
 
@@ -113,7 +103,7 @@ const routeFactory = async () => {
       const image = new Jimp({ width: 256, height: 256, color:'#ffffffff' });
       for(let x = 0; x < 256; x++) {
         for(let y = 0; y < 256; y++) {
-          const pixelLocation = layer.pixelInTileToLatLng(coords, new Point(x,y));
+          const pixelLocation = layer.pixelInTileToLatLng(res.locals.tile.coords, new Point(x,y));
           const pixelColorParameters = influencers.reduce((pixelColor, influencer: typeof influencers[number]) => {
             const distance = EvmTorus.distance(influencer.latlng, pixelLocation);
             const strength = Math.log(influencer.rawStrength) / distance;

@@ -40,7 +40,6 @@ export const sendFile = (file: fileType, res: Response) => {
   if (USE_BLOB_STORAGE && !(file instanceof Buffer)) {
     res.redirect(301, file.url)
   } else {
-    res.set("Content-Type", "image/png");
-    res.send(file);
+    res.type("image/png").send(file);
   }
 };

@@ -150,12 +150,12 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
     }
 
     try {
-      const boundsString = layerInstance.keyToBounds(tileKey).toBBoxString();
-      const response = await fetch(`${API_URL}?bounds=${boundsString}`);
-      const objects: EVMObject[] = await response.json();
-      if (!response.ok) {
+      const response = await fetch(`${API_URL}/${tileKey}`);
+      // status that may probbaly not change over times won't raise an error are treated as an a empty response
+      if (!response.ok && ![400, 402, 403, 404, 405, 406, 410, 413, 414].includes(response.status)) {
         throw new Error(response.statusText);
       }
+      const objects: EVMObject[] = response.ok ? await response.json() : [];
 
       // create a partial record with incoming data
       const knownObjects = get().evmObjects;

@@ -8,17 +8,9 @@ const routeFactory = async () => {
   return async (req: Request, res: Response) => {
     const db = await initDb();
     const EVMObject = db.models.EVMObject;
-    const whereClause = {};
 
     // handle the bounds parameter
-    const boundsMatches = (typeof req.query.bounds === "string") 
-      ? req.query.bounds.match(/^(-?\d+\.?\d*),(-?\d+\.?\d*),(-?\d+\.?\d*),(-?\d+\.?\d*)$/)
-      : null;
-    let boundsPolygon: string | null =null;
-    if( boundsMatches != null ) {
-      const [glob, east, south, west, north] = boundsMatches;
-      boundsPolygon = `POLYGON((${east} ${south}, ${east} ${north}, ${west} ${north}, ${west} ${south}, ${east} ${south}))`
-    }
+    const tileGeom = res.locals.tile.geom; 
 
     const data = await EVMObject.findAll({
       attributes: [
@@ -30,14 +22,15 @@ const routeFactory = async () => {
       ],
       where: {
         [Op.and]: [
-          db.literal(`ST_CoveredBy(latlng, ST_GeomFromText('${boundsPolygon}'))`)
+          db.literal("ST_CoveredBy(latlng, ST_GeomFromText($tileGeom))")
         ],
       },
       order: [
         [db.literal("COALESCE((meta#>>'{circulating_market_cap}')::decimal(15,0), 0)"), 'DESC'],
         [db.literal("COALESCE((meta#>>'{holders}')::decimal(15,0), 0)"), 'DESC']
       ],
-      limit: 30
+      limit: 30,
+      bind: { tileGeom }
     }) as EVMObject[];
 
     res.json(data.map((d) => {
