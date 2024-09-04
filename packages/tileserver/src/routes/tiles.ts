@@ -1,11 +1,11 @@
 import { Jimp, limit255, rgbaToInt } from "jimp";
 import { Request, Response } from "express";
-import { initModel } from '../common/sequelize';
+import initDb from '../common/sequelize';
 import { LatLng, type Coords } from "leaflet";
-import { Sequelize, Op } from "sequelize";
+import { Sequelize, Op, type Model, type FindAttributeOptions, type ModelCtor  } from "sequelize";
 import { getColor, type RGBColor } from "colorthief";
-import { FindAttributeOptions } from "sequelize/lib/model";
 import { getFile, saveFile, sendFile, USE_BLOB_STORAGE, type fileType } from "../services/files";
+import EVMObject, { EVMObject as EVMObjectType } from "../common/sequelize/models/EVMObject";
 
 // Ugly hack to be able to use leaflet withtout a browser
 // Until [this PR](https://github.com/Leaflet/Leaflet/pull/9385) makes it to a release
@@ -13,12 +13,11 @@ globalThis.window = { screen: {}} as any;
 globalThis.document = { documentElement: { style: {}}, createElement: () => ({}) } as any;
 globalThis.navigator = { userAgent: '', platform:'' } as any;
 
-const routeFactory = async (db: Sequelize) => {
+const routeFactory = async () => {
   // They will be able to be statically imported after [this PR](https://github.com/Leaflet/Leaflet/pull/9385) makes it to a release
   const { Point, LatLng } = await import("leaflet");
   const { CoordinatesLayer, EvmTorus } = await import("../common/index.js");
   
-  const EVMObject = initModel(db);
   const layer = new CoordinatesLayer(EvmTorus, "hex");
 
   return async (req: Request, res: Response) => {
@@ -34,6 +33,8 @@ const routeFactory = async (db: Sequelize) => {
     let file: fileType | null = await getFile(filePath, fileDir);
 
     if (file === null) {
+      const db = await initDb();
+      const EVMObject = db.models.EVMObject;
       // get the geograohic bounds of the requested tile
       const coords: Coords = new Point(x,y) as Coords;
       coords.z = z; 
@@ -90,7 +91,7 @@ const routeFactory = async (db: Sequelize) => {
       });
 
       const [innerTileData, outerTileData] = await Promise.all([innerTileQuery, outerTileQuery]);
-      const data = innerTileData.concat(outerTileData);
+      const data = innerTileData.concat(outerTileData) as EVMObjectType[];
       
       // prepare the data
       const influencers = await Promise.all(data.map(async (d): Promise<{color: RGBColor, latlng: LatLng, rawStrength: number}> => {

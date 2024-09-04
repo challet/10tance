@@ -16,7 +16,10 @@ interface EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttri
   }
 }
 
+export type {EVMObject};
+
 export default (db: Sequelize) => {
+  console.log("initModel");
   return db.define<EVMObject>(
     'EVMObject', {
       id: {

@@ -1,11 +1,13 @@
 import { Request, Response } from "express";
 import { Op, Sequelize } from "sequelize";
-import { initModel } from '../common/sequelize';
+import initDb from '../common/sequelize';
+import { EVMObject } from "../common/sequelize/models/EVMObject";
 
-const routeFactory = async (db:Sequelize) => {
-  const EVMObject = initModel(db);
+const routeFactory = async () => {
 
   return async (req: Request, res: Response) => {
+    const db = await initDb();
+    const EVMObject = db.models.EVMObject;
     const whereClause = {};
 
     // handle the bounds parameter
@@ -36,7 +38,7 @@ const routeFactory = async (db:Sequelize) => {
         [db.literal("COALESCE((meta#>>'{holders}')::decimal(15,0), 0)"), 'DESC']
       ],
       limit: 30
-    });
+    }) as EVMObject[];
 
     res.json(data.map((d) => {
       return {
