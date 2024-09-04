@@ -8,9 +8,6 @@ import createImage, { type pixelInfluencer } from "../services/image";
 
 const tilesRoute = async (req: Request, res: Response) => {
   const { x, y, z } = res.locals.tile.coords;
-  const fileDir = USE_BLOB_STORAGE ? `tiles/${z}` : `${process.cwd()}/files/${z}`;
-  const filePath = `${fileDir}/${x}-${y}.png`;
-
   const file = await File.init(`tiles/${z}`, `${x}-${y}.png`);
 
   if (!file.exists) {
@@ -87,13 +84,10 @@ const tilesRoute = async (req: Request, res: Response) => {
       };
     }));
 
-    //create the image
+    // create the image and save it 
     const image = await createImage(res.locals.tile.coords, influencers, MIN_STRENGTH);
-    
-    // save it 
     await file.save(await image.getBuffer("image/png"));
   }
-  // send it
   file.sendToResponse(res.type("image/png"));
 }
 
