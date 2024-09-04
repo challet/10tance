@@ -1,11 +1,11 @@
 import { Jimp, limit255, rgbaToInt } from "jimp";
 import { Request, Response } from "express";
-import { initModel } from './common/sequelize';
+import { initModel } from '../common/sequelize';
 import { LatLng, type Coords } from "leaflet";
 import { Sequelize, Op } from "sequelize";
 import { getColor, type RGBColor } from "colorthief";
 import { FindAttributeOptions } from "sequelize/lib/model";
-import { list, ListBlobResult, put, type PutBlobResult } from "@vercel/blob";
+import { list, type ListBlobResult, put, type PutBlobResult } from "@vercel/blob";
 import fs from "node:fs";
 
 // Ugly hack to be able to use leaflet withtout a browser
@@ -20,6 +20,7 @@ type file = PutBlobResult | ListBlobResult["blobs"][number] | Buffer;
 const getFile = async (filePath: string, fileDir: string): Promise<file | null> => {
   if (USE_BLOB_STORAGE) {
     // use Vercel blob storage
+    // TODO don't call that "list" each time. Or not since Vercel functions are short lived (?)
     const files = await list({prefix: fileDir});
     return files.blobs.find((file) => file.pathname == filePath) ?? null;
   } else { 
@@ -59,7 +60,7 @@ const sendFile = (file: file, res: Response) => {
 const routeFactory = async (db: Sequelize) => {
   // They will be able to be statically imported after [this PR](https://github.com/Leaflet/Leaflet/pull/9385) makes it to a release
   const { Point, LatLng } = await import("leaflet");
-  const { CoordinatesLayer, EvmTorus } = await import("./common/index.js");
+  const { CoordinatesLayer, EvmTorus } = await import("../common/index.js");
   
   const EVMObject = initModel(db);
   const layer = new CoordinatesLayer(EvmTorus, "hex");
