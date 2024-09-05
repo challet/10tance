@@ -31,7 +31,6 @@ class EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttribute
   private static get COMMON_INFLUENCERS_WHERE() {
     const db = this.sequelize!;
     return [
-      {id : '0x7a1263eC3Bf0a19e25C553B8A2C312e903262C5E'},
       db.literal("meta->'circulating_market_cap' IS NOT NULL"),
       db.literal("(meta->>'circulating_market_cap')::float != 0"),
       db.literal("meta->'icon_url' IS NOT NULL")
@@ -75,7 +74,7 @@ class EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttribute
     });
   }
   
-  static async findAllInfluencersOffTile(bounds: LatLngBounds, minStrength: number, limit: number = 150): Promise<InstanceType<EVMObjectType>[]> {
+  static async findAllInfluencersOffTile(bounds: LatLngBounds, minStrength: number, limit: number = 60): Promise<InstanceType<EVMObjectType>[]> {
     const db = this.sequelize!;
     const tileGeom = boundsToGeom(bounds);
 

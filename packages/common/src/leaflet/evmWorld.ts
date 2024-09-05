@@ -86,8 +86,8 @@ export const EvmTorus: CRS & {
       let dx = latlng2.lng - latlng1.lng,
         dy = latlng2.lat - latlng1.lat;
 
-      dx = (this.wrapLngSize != undefined && Math.abs(dx) > this.wrapLngSize / 2) ? dx + this.wrapLngSize : dx;
-      dy = (this.wrapLatSize != undefined && Math.abs(dy) > this.wrapLatSize / 2) ? dy + this.wrapLatSize : dy;
+      dx = (this.wrapLngSize != undefined && Math.abs(dx) > this.wrapLngSize / 2) ? Math.abs(dx) - this.wrapLngSize : dx;
+      dy = (this.wrapLatSize != undefined && Math.abs(dy) > this.wrapLatSize / 2) ? Math.abs(dy) - this.wrapLatSize : dy;
 
       return Math.sqrt(dx * dx + dy * dy);
     },
