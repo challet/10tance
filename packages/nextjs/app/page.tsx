@@ -21,8 +21,8 @@ const Home: NextPage = () => {
       <div className="drawer-content min-h-[calc(100vh-4rem)] z-0">
         <Map />
       </div>
-      <div className="drawer-side w-[30rem] h-full absolute z-1">
-        <div className="min-h-full bg-base-200">
+      <div className="drawer-side w-full sm:w-[30rem] h-full absolute z-1">
+        <div className="min-h-full bg-base-200 w-full">
           <button className="btn btn-circle btn-outline float-end m-4" onClick={unselectObjectHandler}>
             <svg
               xmlns="http://www.w3.org/2000/svg"

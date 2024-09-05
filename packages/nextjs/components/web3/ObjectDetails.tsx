@@ -16,7 +16,7 @@ const ObjectDetails: FunctionComponent = () => {
   } else {
     return (
       <>
-        <ul className="text-base-content w-[30rem] p-4">
+        <ul className="text-base-content p-4">
           <li className="content-center">
             <Image
               className="aspect-square size-20 p-0"
