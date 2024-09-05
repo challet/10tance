@@ -31,6 +31,7 @@ class EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttribute
   private static get COMMON_INFLUENCERS_WHERE() {
     const db = this.sequelize!;
     return [
+      {id : '0x7a1263eC3Bf0a19e25C553B8A2C312e903262C5E'},
       db.literal("meta->'circulating_market_cap' IS NOT NULL"),
       db.literal("(meta->>'circulating_market_cap')::float != 0"),
       db.literal("meta->'icon_url' IS NOT NULL")
@@ -78,14 +79,9 @@ class EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttribute
     const db = this.sequelize!;
     const tileGeom = boundsToGeom(bounds);
 
-    // create a multipolygon from the original polygon, allowing to compoute distances from other side of the world edges
-    const wrappingMultiPolygon = `ST_Union(ARRAY[
-      ST_GeomFromText($tileGeom),
-      ST_Translate(ST_GeomFromText($tileGeom),1125899906842624, 0),
-      ST_Translate(ST_GeomFromText($tileGeom), -1125899906842624, 0),
-      ST_Translate(ST_GeomFromText($tileGeom), 0, 1125899906842624),
-      ST_Translate(ST_GeomFromText($tileGeom), 0, -1125899906842624)
-    ])`;
+    // create a multipolygon from the original polygon, allowing to compute distances from other side of the world edges
+    const wrappingMultiPolygon = await makeWrappingMultiPolygon("ST_GeomFromText($tileGeom)");
+
     console.log({ tileGeom, minStrength });
     return EVMObject.findAll({
       attributes: this.COMMON_ATTRIBUTES,
@@ -135,3 +131,21 @@ const boundsToGeom = (bounds: LatLngBounds): string => {
   return `POLYGON((${e} ${s}, ${e} ${n}, ${w} ${n}, ${w} ${s}, ${e} ${s}))`;
 }
 
+// Async could be removed and dynamic import made static after [this PR](https://github.com/Leaflet/Leaflet/pull/9385) makes it to a release
+const makeWrappingMultiPolygon = async (originalPolygon: string): Promise<string> => {
+  const { EvmTorus } = await import("../../leaflet/evmWorld.js");
+  if (EvmTorus.wrapLngSize === undefined || EvmTorus.wrapLatSize === undefined) {
+    return originalPolygon;
+  } else {
+    const multiPolygons = [originalPolygon];
+    // duplicate the tile over the 8 surrounding worlds
+    for(let x = -1; x <= 1; x++) {
+      for(let y = -1; y <= 1; y++) {
+        if(x != 0 || y != 0) { // no need for a 0,0 translate
+          multiPolygons.push(`ST_Translate(${originalPolygon},${EvmTorus.wrapLngSize * x}, ${EvmTorus.wrapLatSize * y})`)
+        }
+      }
+    }
+    return `ST_Union(ARRAY[${multiPolygons.join(',')}])`;
+  }
+}

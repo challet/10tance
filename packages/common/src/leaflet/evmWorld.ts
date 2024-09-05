@@ -55,7 +55,11 @@ export const EvmLonLat = Util.extend({}, Projection.LonLat, {
   },
 });
 
-export const EvmTorus: CRS & { constraintsLatLngBounds: (bounds: LatLngBounds) => LatLngBounds | null } = Util.extend(
+export const EvmTorus: CRS & { 
+  wrapLngSize: number | undefined;
+  wrapLatSize: number | undefined;
+  constraintsLatLngBounds: (bounds: LatLngBounds) => LatLngBounds | null;
+} = Util.extend(
   {},
   CRS.Simple,
   {

@@ -28,7 +28,7 @@ const createImage = async (tileCoords: Coords, influencers: pixelInfluencer[], M
       const pixelColorParameters = influencers.reduce((pixelColor, influencer: typeof influencers[number]) => {
         const distance = EvmTorus.distance(latLng(influencer.latlng), pixelLocation);
         const strength = Math.log(influencer.rawStrength) / distance;
-        //console.log(influencer.rawStrength, distance, strength);
+        //console.log(influencer.rawStrength, Math.log(influencer.rawStrength), distance, strength);
         if (strength > MIN_STRENGTH) {
           return {
             r: pixelColor.r + strength * influencer.color.r,
