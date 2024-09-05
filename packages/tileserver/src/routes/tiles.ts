@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import initDb from '../common/sequelize';
 import { Op, type FindAttributeOptions, type ModelCtor  } from "sequelize";
 import { getColor } from "colorthief";
-import { File, getFile, saveFile, sendFile, USE_BLOB_STORAGE, type fileType } from "../services/files";
+import File from "../services/files";
 import { EVMObject as EVMObjectType } from "../common/sequelize/models/EVMObject";
 import createImage, { type pixelInfluencer } from "../services/image";
 

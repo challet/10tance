@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { Op } from "sequelize";
 import initDb from '../common/sequelize';
 import { EVMObject } from "../common/sequelize/models/EVMObject";
-import { File } from "../services/files";
+import File from "../services/files";
 
 const objectsRoute = async (req: Request, res: Response) => {
   const { x, y, z } = res.locals.tile.coords;
