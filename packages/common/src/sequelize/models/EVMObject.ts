@@ -31,7 +31,6 @@ class EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttribute
   private static get COMMON_INFLUENCERS_WHERE() {
     const db = this.sequelize!;
     return [
-      {id: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85'},
       db.literal("meta->'circulating_market_cap' IS NOT NULL"),
       db.literal("(meta->>'circulating_market_cap')::float != 0"),
       db.literal("meta->'icon_url' IS NOT NULL")
@@ -79,6 +78,14 @@ class EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttribute
     const db = this.sequelize!;
     const tileGeom = boundsToGeom(bounds);
 
+    // create a multipolygon from the original polygon, allowing to compoute distances from other side of the world edges
+    const wrappingMultiPolygon = `ST_Union(ARRAY[
+      ST_GeomFromText($tileGeom),
+      ST_Translate(ST_GeomFromText($tileGeom),1125899906842624, 0),
+      ST_Translate(ST_GeomFromText($tileGeom), -1125899906842624, 0),
+      ST_Translate(ST_GeomFromText($tileGeom), 0, 1125899906842624),
+      ST_Translate(ST_GeomFromText($tileGeom), 0, -1125899906842624)
+    ])`;
     console.log({ tileGeom, minStrength });
     return EVMObject.findAll({
       attributes: this.COMMON_ATTRIBUTES,
@@ -88,11 +95,11 @@ class EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttribute
           // outside the tile
           db.literal("NOT ST_CoveredBy(latlng, ST_GeomFromText($tileGeom))"),
           // and with influence able to reach it
-          //db.literal("LOG((meta->>'circulating_market_cap')::FLOAT) / ST_Distance(latlng, ST_Union(ARRAY[ST_GeomFromText($tileGeom),ST_Translate(ST_GeomFromText($tileGeom), 1125899906842624, 0),ST_Translate(ST_GeomFromText($tileGeom), -1125899906842624, 0),ST_Translate(ST_GeomFromText($tileGeom), 0, 1125899906842624),ST_Translate(ST_GeomFromText($tileGeom), 0, -1125899906842624)])) > $minStrength")
+          db.literal(`LN((meta->>'circulating_market_cap')::FLOAT) / ST_Distance(latlng, ${wrappingMultiPolygon}) > $minStrength`)
         ],
       },
       order: [
-        [db.literal("LOG((meta->>'circulating_market_cap')::FLOAT) / ST_Distance(latlng, ST_Union(ARRAY[ST_GeomFromText($tileGeom),ST_Translate(ST_GeomFromText($tileGeom), 1125899906842624, 0),ST_Translate(ST_GeomFromText($tileGeom), -1125899906842624, 0),ST_Translate(ST_GeomFromText($tileGeom), 0, 1125899906842624),ST_Translate(ST_GeomFromText($tileGeom), 0, -1125899906842624)]))"), "DESC"]
+        [db.literal(`LN((meta->>'circulating_market_cap')::FLOAT) / ST_Distance(latlng, ${wrappingMultiPolygon})`), "DESC"]
       ],
       limit,
       bind: { tileGeom, minStrength },
