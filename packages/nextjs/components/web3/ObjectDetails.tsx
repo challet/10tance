@@ -16,40 +16,66 @@ const ObjectDetails: FunctionComponent = () => {
   } else {
     return (
       <>
-        <ul className="text-base-content p-4">
-          <li className="content-center">
-            <Image
-              className="aspect-square size-20 p-0"
-              src={data.icon_url ?? defaultIcon.src}
-              alt={data.symbol}
-              width={80}
-              height={80}
-            />
-          </li>
-          <li>
-            <h2 className="text-lg font-semibold">{data.symbol}</h2>
-          </li>
-          <li>Address : {data.id} </li>
-          <li>Latitude : {data.lat} </li>
-          <li>Longitude : {data.lng} </li>
-          {isLoading ? ( // it is partially loaded
-            <li>loading</li>
-          ) : (
+        <div className="text-center pt-14">
+          <Image
+            className="aspect-square size-20 p-0 m-auto"
+            src={data.icon_url ?? defaultIcon.src}
+            alt={data.symbol}
+            width={80}
+            height={80}
+          />
+          <h2 className="text-lg font-semibold mt-2">{data.symbol}</h2>
+        </div>
+        <dl className="text-base-content my-10 mx-4 divide-y divide-gray-300 leading-6 border-y border-gray-300">
+          <div className="py-4">
+            <dt className="font-medium text-gray-900">Address</dt>
+            <dd className="mt-1 sm:col-span-2 text-gray-700">{data.id}</dd>
+          </div>
+          <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
+            <dt className="font-medium text-gray-900">Latitude</dt>
+            <dd className="mt-1 sm:col-span-2 text-gray-700">{data.lat}</dd>
+          </div>
+          <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
+            <dt className="font-medium text-gray-900">Longitude</dt>
+            <dd className="mt-1 sm:col-span-2 text-gray-700">{data.lng}</dd>
+          </div>
+          {!isLoading && ( // it is partially loaded
             <>
-              <li>Full name : {data.name}</li>
-              <li>Circulating market cap : {data.circulating_market_cap}</li>
-              <li>Holders : {data.holders}</li>
-              <li>Exchange rate : {data.exchange_rate}</li>
-              <li>Total supply : {data.total_supply}</li>
+              <div className="py-4  sm:grid sm:grid-cols-3 sm:gap-4">
+                <dt className="font-medium text-gray-900">Full name</dt>
+                <dd className="mt-1 sm:col-span-2 text-gray-700">{data.name}</dd>
+              </div>
+              <div className="py-4  sm:grid sm:grid-cols-3 sm:gap-4">
+                <dt className="font-medium text-gray-900">Circulating market cap</dt>
+                <dd className="mt-1 sm:col-span-2 text-gray-700">{data.circulating_market_cap}</dd>
+              </div>
+              <div className="py-4  sm:grid sm:grid-cols-3 sm:gap-4">
+                <dt className="font-medium text-gray-900">Holders</dt>
+                <dd className="mt-1 sm:col-span-2 text-gray-700">{data.holders}</dd>
+              </div>
+              <div className="py-4  sm:grid sm:grid-cols-3 sm:gap-4">
+                <dt className="font-medium text-gray-900">Exchange rate</dt>
+                <dd className="mt-1 sm:col-span-2 text-gray-700">{data.exchange_rate}</dd>
+              </div>
+              <div className="py-4  sm:grid sm:grid-cols-3 sm:gap-4">
+                <dt className="font-medium text-gray-900">Total supply</dt>
+                <dd className="mt-1 sm:col-span-2 text-gray-700">{data.total_supply}</dd>
+              </div>
             </>
           )}
-          <li>
-            See more on &nbsp;
-            <a href={`https://optimism.blockscout.com/address/${data.id}`} target="_blank" className="underline">
-              Blockscout explorer
-            </a>
-          </li>
-        </ul>
+        </dl>
+        {isLoading && (
+          <svg className="animate-spin h-10 w-10 m-auto text-center" viewBox="0 0 24 24">
+            <path d="M10.72,19.9a8,8,0,0,1-6.5-9.79A7.77,7.77,0,0,1,10.4,4.16a8,8,0,0,1,9.49,6.52A1.54,1.54,0,0,0,21.38,12h.13a1.37,1.37,0,0,0,1.38-1.54,11,11,0,1,0-12.7,12.39A1.54,1.54,0,0,0,12,21.34h0A1.47,1.47,0,0,0,10.72,19.9Z" />
+          </svg>
+        )}
+
+        <div className="text-center">
+          See more on &nbsp;
+          <a href={`https://optimism.blockscout.com/address/${data.id}`} target="_blank" className="underline">
+            Blockscout explorer
+          </a>
+        </div>
       </>
     );
   }
