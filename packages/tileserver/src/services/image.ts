@@ -30,11 +30,12 @@ const createImage = async (tileCoords: Coords, influencers: pixelInfluencer[], M
         const strength = Math.log(influencer.rawStrength) / distance;
         //console.log(influencer.rawStrength, Math.log(influencer.rawStrength), distance, strength);
         if (strength > MIN_STRENGTH) {
+          const strengthRatio = 1 - (strength / MIN_STRENGTH);
           return {
-            r: pixelColor.r + strength * influencer.color.r,
-            g: pixelColor.g + strength * influencer.color.g,
-            b: pixelColor.b + strength * influencer.color.b,
-            totalStrength: pixelColor.totalStrength + strength
+            r: pixelColor.r + strengthRatio * influencer.color.r,
+            g: pixelColor.g + strengthRatio * influencer.color.g,
+            b: pixelColor.b + strengthRatio * influencer.color.b,
+            totalStrength: pixelColor.totalStrength + strengthRatio
           }
         } else {
           return pixelColor;
