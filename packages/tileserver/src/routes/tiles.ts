@@ -3,7 +3,7 @@ import initDb from '../common/sequelize';
 import { Op, type FindAttributeOptions, type ModelCtor  } from "sequelize";
 import { getColor } from "colorthief";
 import File from "../services/files";
-import { EVMObject as EVMObjectType } from "../common/sequelize/models/EVMObject";
+import type { EVMObjectType } from "../common/sequelize/models/EVMObject";
 import createImage, { type pixelInfluencer } from "../services/image";
 
 const tilesRoute = async (req: Request, res: Response) => {
@@ -44,9 +44,9 @@ const tilesRoute = async (req: Request, res: Response) => {
       ],
       bind: { tileGeom: res.locals.tile.geom },
       limit: 30
-    });
+    }) as Promise<EVMObjectType[]>;
 
-    const outerTileQuery = await EVMObject.findAll({
+    const outerTileQuery = EVMObject.findAll({
       attributes,
       where: {
         [Op.and]: [
@@ -62,10 +62,10 @@ const tilesRoute = async (req: Request, res: Response) => {
       ],
       bind: { tileGeom: res.locals.tile.geom, MIN_STRENGTH },
       limit: 150
-    });
+    }) as Promise<EVMObjectType[]>;
 
     const [innerTileData, outerTileData] = await Promise.all([innerTileQuery, outerTileQuery]);
-    const data = innerTileData.concat(outerTileData) as EVMObjectType[];
+    const data = innerTileData.concat(outerTileData) ;
     
     // prepare the data
     const influencers = await Promise.all(data.map(async (d): Promise<pixelInfluencer> => {

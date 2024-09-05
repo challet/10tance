@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Op } from "sequelize";
 import initDb from '../common/sequelize';
-import { EVMObject } from "../common/sequelize/models/EVMObject";
+import type { EVMObjectType } from "../common/sequelize/models/EVMObject";
 import File from "../services/files";
 
 const objectsRoute = async (req: Request, res: Response) => {
@@ -34,7 +34,7 @@ const objectsRoute = async (req: Request, res: Response) => {
       ],
       limit: 30,
       bind: { tileGeom }
-    }) as EVMObject[];
+    }) as EVMObjectType[];
 
     const result = data.map((d) => ({
       id: d.id,

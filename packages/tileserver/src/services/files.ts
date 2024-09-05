@@ -35,7 +35,7 @@ export default abstract class File {
 }
 
 class LocalFile extends File {
-  protected file: Buffer | null;
+  declare protected file: Buffer | null;
 
   constructor(fileDir: string, fileName: string) {
     super(fileDir, fileName);
@@ -62,7 +62,7 @@ class LocalFile extends File {
 }
 
 class VercelFile extends File {
-  protected file: PutBlobResult | ListBlobResult["blobs"][number] | null;
+  declare protected file: PutBlobResult | ListBlobResult["blobs"][number] | null;
 
   constructor(fileDir: string, fileName: string, filesList: ListBlobResult) {
     super(fileDir, fileName);
