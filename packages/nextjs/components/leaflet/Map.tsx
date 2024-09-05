@@ -60,7 +60,7 @@ async function factory() {
       >
         <TileLayer
           url={TILES_URL}
-          noWrap={true}
+          noWrap={false}
           eventHandlers={{ tileloadstart: onTileLoad, tileunload: onTileUnload }}
           minZoom={0}
           maxZoom={ISO_ZOOM}

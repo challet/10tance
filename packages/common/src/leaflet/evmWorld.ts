@@ -55,7 +55,11 @@ export const EvmLonLat = Util.extend({}, Projection.LonLat, {
   },
 });
 
-export const EvmTorus: CRS & { constraintsLatLngBounds: (bounds: LatLngBounds) => LatLngBounds | null } = Util.extend(
+export const EvmTorus: CRS & { 
+  wrapLngSize: number | undefined;
+  wrapLatSize: number | undefined;
+  constraintsLatLngBounds: (bounds: LatLngBounds) => LatLngBounds | null;
+} = Util.extend(
   {},
   CRS.Simple,
   {
@@ -71,7 +75,22 @@ export const EvmTorus: CRS & { constraintsLatLngBounds: (bounds: LatLngBounds) =
     projection: EvmLonLat,
     transformation: transformation(1, 0, 1, 0),
     infinite: false, // it's a torus : east connects with west and north with south
+    get wrapLngSize(): number | undefined {
+      return this.wrapLng ? this.wrapLng[1] - this.wrapLng[0] : undefined; 
+    },
+    get wrapLatSize(): number | undefined {
+      return this.wrapLat ? this.wrapLat[0] - this.wrapLat[1] : undefined; 
+    },
+    // distance version that takes into account the wrapping
+    distance(latlng1: LatLng, latlng2: LatLng): number {
+      let dx = latlng2.lng - latlng1.lng,
+        dy = latlng2.lat - latlng1.lat;
 
+      dx = (this.wrapLngSize != undefined && Math.abs(dx) > this.wrapLngSize / 2) ? Math.abs(dx) - this.wrapLngSize : dx;
+      dy = (this.wrapLatSize != undefined && Math.abs(dy) > this.wrapLatSize / 2) ? Math.abs(dy) - this.wrapLatSize : dy;
+
+      return Math.sqrt(dx * dx + dy * dy);
+    },
     /* custom methods */
 
     // Same as CRS.wrapLatLngBounds but doesn't keep the same size as the given one

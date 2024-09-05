@@ -4,8 +4,7 @@ import { ISO_ZOOM } from "../common/index.js";
 
 export type tileData = {
   coords: Coords;
-  bounds: LatLngBounds;
-  geom: string;
+  bounds: LatLngBounds
 }
 
 // can be not aync anymore and dynamic import removed after [this PR](https://github.com/Leaflet/Leaflet/pull/9385) makes it to a release
@@ -38,14 +37,9 @@ const tileBasedMiddlewareFactory = async() => {
     const coords: Coords = new Point(x, y) as Coords;
     coords.z = z; 
     const bounds = layer.tileCoordsToBoundsWithoutAMap(coords);
-    const e = bounds.getEast(),
-      w = bounds.getWest(),
-      n = bounds.getNorth(),
-      s = bounds.getSouth();
     res.locals.tile = {
       coords,
-      bounds,
-      geom: `POLYGON((${e} ${s}, ${e} ${n}, ${w} ${n}, ${w} ${s}, ${e} ${s}))`
+      bounds
     };
 
     next();

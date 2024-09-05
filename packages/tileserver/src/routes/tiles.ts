@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import initDb from '../common/sequelize';
 import { Op, type FindAttributeOptions, type ModelCtor  } from "sequelize";
 import { getColor } from "colorthief";
-import { File, getFile, saveFile, sendFile, USE_BLOB_STORAGE, type fileType } from "../services/files";
-import { EVMObject as EVMObjectType } from "../common/sequelize/models/EVMObject";
+import File from "../services/files";
+import type { EVMObjectType } from "../common/sequelize/models/EVMObject";
 import createImage, { type pixelInfluencer } from "../services/image";
 
 const tilesRoute = async (req: Request, res: Response) => {
@@ -12,60 +12,17 @@ const tilesRoute = async (req: Request, res: Response) => {
 
   if (!file.exists) {
     const db = await initDb();
-    const EVMObject = db.models.EVMObject;
+    const EVMObject = db.models.EVMObject as EVMObjectType;
 
     // TODO should it vary with the zoom level ?
-    const MIN_STRENGTH = 1 / Math.pow(2, 46);
+    const MIN_STRENGTH = 1 / Math.pow(2, 44);
 
-    const attributes = [
-      // TODO inpect why the binary data cannot be raw fetched
-      // without the convert_from, it looks like something (postgre, sequelize ?) is converting it to integer representation
-      [db.fn('convert_from', db.col('id'), 'utf8'), 'id'],
-      [db.literal('latlng::POINT'), 'latlng'],
-      'meta'
-    ] as FindAttributeOptions;
-    const where = [
-      db.literal("meta->'circulating_market_cap' IS NOT NULL"),
-      db.literal("(meta->>'circulating_market_cap')::float != 0"),
-      db.literal("meta->'icon_url' IS NOT NULL")
-    ];
-
-    const innerTileQuery = EVMObject.findAll({
-      attributes,
-      where: {
-        [Op.and]: [
-          ...where,
-          // inside the tile
-          db.literal("ST_CoveredBy(latlng, ST_GeomFromText($tileGeom))")
-        ],
-      },
-      order: [
-        [db.literal("(meta->>'circulating_market_cap')::float"), "DESC"]
-      ],
-      bind: { tileGeom: res.locals.tile.geom },
-      limit: 30
-    });
-
-    const outerTileQuery = await EVMObject.findAll({
-      attributes,
-      where: {
-        [Op.and]: [
-          ...where,
-          // outside the tile
-          db.literal("NOT ST_CoveredBy(latlng, ST_GeomFromText($tileGeom))"),
-          // and with influence able to reach it
-          db.literal("LOG((meta->>'circulating_market_cap')::float) / ST_Distance(latlng, ST_GeomFromText($tileGeom)) > $MIN_STRENGTH")
-        ],
-      },
-      order: [
-        [db.literal("LOG((meta->>'circulating_market_cap')::float) / ST_Distance(latlng, ST_GeomFromText($tileGeom))"), "DESC"]
-      ],
-      bind: { tileGeom: res.locals.tile.geom, MIN_STRENGTH },
-      limit: 150
-    });
-
-    const [innerTileData, outerTileData] = await Promise.all([innerTileQuery, outerTileQuery]);
-    const data = innerTileData.concat(outerTileData) as EVMObjectType[];
+    // get the influencers object of the tile
+    const [innerTileData, outerTileData] = await Promise.all([
+      EVMObject.findAllInfluencersInTile(res.locals.tile.bounds),
+      EVMObject.findAllInfluencersOffTile(res.locals.tile.bounds, MIN_STRENGTH),
+    ]);
+    const data = innerTileData.concat(outerTileData) ;
     
     // prepare the data
     const influencers = await Promise.all(data.map(async (d): Promise<pixelInfluencer> => {

@@ -2,11 +2,10 @@ import { list, type ListBlobResult, put, type PutBlobResult } from "@vercel/blob
 import type { Response } from "express";
 import fs from "node:fs";
 
-export type fileType = PutBlobResult | ListBlobResult["blobs"][number] | Buffer ;
+const USE_BLOB_STORAGE = 'BLOB_READ_WRITE_TOKEN' in process.env;
+const SKIP_CACHE = process.env.DEBUG_SKIP_RESPONSE_CACHE === 'true';
 
-export const USE_BLOB_STORAGE = 'BLOB_READ_WRITE_TOKEN' in process.env;
-
-export abstract class File {
+export default abstract class File {
   protected fileDir: string;
   protected filePath: string;
   protected file: PutBlobResult | ListBlobResult["blobs"][number] | Buffer | null = null;
@@ -28,7 +27,7 @@ export abstract class File {
   }
 
   get exists(): boolean {
-    return this.file !== null;
+    return !SKIP_CACHE && this.file !== null;
   }
   
   abstract save(file: Buffer): Promise<void>;
@@ -36,7 +35,7 @@ export abstract class File {
 }
 
 class LocalFile extends File {
-  protected file: Buffer | null;
+  declare protected file: Buffer | null;
 
   constructor(fileDir: string, fileName: string) {
     super(fileDir, fileName);
@@ -44,24 +43,26 @@ class LocalFile extends File {
   }
 
   async save(file: Buffer): Promise<void> {
-    if (!fs.existsSync(this.fileDir)) {
-      fs.mkdirSync(this.fileDir, { recursive: true });
-    }
-    fs.writeFileSync(this.filePath, file);
     this.file = file;
+    if (!SKIP_CACHE) {
+      if (!fs.existsSync(this.fileDir)) {
+        fs.mkdirSync(this.fileDir, { recursive: true });
+      }
+      fs.writeFileSync(this.filePath, file);
+    }
   }
 
   sendToResponse(res: Response): void {
-    if (this.exists) {
-      res.send(this.file);
+    if (this.exists || SKIP_CACHE) {
+      res.send(this.file).end();
     } else {
-      res.status(404);
+      res.status(404).end();
     }
   }
 }
 
 class VercelFile extends File {
-  protected file: PutBlobResult | ListBlobResult["blobs"][number] | null;
+  declare protected file: PutBlobResult | ListBlobResult["blobs"][number] | null;
 
   constructor(fileDir: string, fileName: string, filesList: ListBlobResult) {
     super(fileDir, fileName);
@@ -76,46 +77,7 @@ class VercelFile extends File {
     if (this.exists) {
       res.redirect(301, this.file!.url);
     } else {
-      res.status(404);
+      res.status(404).end();
     }
   }
 }
-
-
-export const getFile = async (filePath: string, fileDir: string): Promise<fileType | null> => {
-  if (USE_BLOB_STORAGE) {
-    // use Vercel blob storage
-    // TODO don't call that "list" each time. Or not since Vercel functions are short lived (?)
-    const files = await list({prefix: fileDir});
-    return files.blobs.find((file) => file.pathname == filePath) ?? null;
-  } else { 
-    // local storage
-    if (fs.existsSync(filePath)) {
-      return fs.readFileSync(filePath);
-    } else {
-      return null;
-    }
-  }
-};
-
-export const saveFile = async(file: Buffer, filePath: string, fileDir: string): Promise<fileType> => {
-  if (USE_BLOB_STORAGE) {
-    // use Vercel blob storage
-    return await put(filePath, file, { access: 'public' });
-  } else { 
-    // local storage
-    if (!fs.existsSync(fileDir)) {
-      fs.mkdirSync(fileDir);
-    }
-    fs.writeFileSync(filePath, file);
-    return file;
-  }
-};
-
-export const sendFile = (file: fileType, res: Response) => {
-  if (USE_BLOB_STORAGE && !(file instanceof Buffer)) {
-    res.redirect(301, file.url)
-  } else {
-    res.type("image/png").send(file);
-  }
-};
