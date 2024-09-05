@@ -15,7 +15,7 @@ const tilesRoute = async (req: Request, res: Response) => {
     const EVMObject = db.models.EVMObject as EVMObjectType;
 
     // TODO should it vary with the zoom level ?
-    const MIN_STRENGTH = 1 / Math.pow(2, 46);
+    const MIN_STRENGTH = 1 / Math.pow(2, 44);
 
     // get the influencers object of the tile
     const [innerTileData, outerTileData] = await Promise.all([

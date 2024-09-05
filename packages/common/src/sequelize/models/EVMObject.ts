@@ -1,9 +1,6 @@
 import type { LatLngBounds } from 'leaflet';
 import { Model, DataTypes, Op } from 'sequelize';
-import type { Sequelize, InferAttributes, InferCreationAttributes, FindOptions, WhereOptions, BindOrReplacements, WhereAttributeHash, FindAttributeOptions } from 'sequelize';
-import type { Fn, Json, Literal, Where } from 'sequelize/lib/utils';
-
-
+import type { Sequelize, InferAttributes, InferCreationAttributes, FindAttributeOptions } from 'sequelize';
 
 class EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttributes<EVMObject>> {
   declare id: Buffer;
@@ -71,7 +68,7 @@ class EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttribute
         ],
       },
       order: [
-        [db.literal("(meta->>'circulating_market_cap')::float"), "DESC"]
+        [db.literal("(meta->>'circulating_market_cap')::FLOAT"), "DESC"]
       ],
       limit,
       bind: { tileGeom }
@@ -82,6 +79,7 @@ class EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttribute
     const db = this.sequelize!;
     const tileGeom = boundsToGeom(bounds);
 
+    console.log({ tileGeom, minStrength });
     return EVMObject.findAll({
       attributes: this.COMMON_ATTRIBUTES,
       where: {
@@ -90,18 +88,18 @@ class EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttribute
           // outside the tile
           db.literal("NOT ST_CoveredBy(latlng, ST_GeomFromText($tileGeom))"),
           // and with influence able to reach it
-          db.literal("LOG((meta->>'circulating_market_cap')::float) / ST_Distance(latlng, ST_GeomFromText($tileGeom)) > $minStrength")
+          //db.literal("LOG((meta->>'circulating_market_cap')::FLOAT) / ST_Distance(latlng, ST_Union(ARRAY[ST_GeomFromText($tileGeom),ST_Translate(ST_GeomFromText($tileGeom), 1125899906842624, 0),ST_Translate(ST_GeomFromText($tileGeom), -1125899906842624, 0),ST_Translate(ST_GeomFromText($tileGeom), 0, 1125899906842624),ST_Translate(ST_GeomFromText($tileGeom), 0, -1125899906842624)])) > $minStrength")
         ],
       },
       order: [
-        [db.literal("LOG((meta->>'circulating_market_cap')::float) / ST_Distance(latlng, ST_GeomFromText($tileGeom))"), "DESC"]
+        [db.literal("LOG((meta->>'circulating_market_cap')::FLOAT) / ST_Distance(latlng, ST_Union(ARRAY[ST_GeomFromText($tileGeom),ST_Translate(ST_GeomFromText($tileGeom), 1125899906842624, 0),ST_Translate(ST_GeomFromText($tileGeom), -1125899906842624, 0),ST_Translate(ST_GeomFromText($tileGeom), 0, 1125899906842624),ST_Translate(ST_GeomFromText($tileGeom), 0, -1125899906842624)]))"), "DESC"]
       ],
       limit,
       bind: { tileGeom, minStrength },
     });
   }
-
 }
+
 
 export type EVMObjectType = typeof EVMObject;
 
