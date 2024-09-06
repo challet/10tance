@@ -77,11 +77,9 @@ class EVMObject extends Model<InferAttributes<EVMObject>, InferCreationAttribute
   static async findAllInfluencersOffTile(bounds: LatLngBounds, minStrength: number, limit: number = 60): Promise<InstanceType<EVMObjectType>[]> {
     const db = this.sequelize!;
     const tileGeom = boundsToGeom(bounds);
-
     // create a multipolygon from the original polygon, allowing to compute distances from other side of the world edges
     const wrappingMultiPolygon = await makeWrappingMultiPolygon("ST_GeomFromText($tileGeom)");
 
-    console.log({ tileGeom, minStrength });
     return EVMObject.findAll({
       attributes: this.COMMON_ATTRIBUTES,
       where: {

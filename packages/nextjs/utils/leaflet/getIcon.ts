@@ -3,8 +3,8 @@ import type { PointTuple } from "leaflet";
 import { Icon } from "leaflet";
 
 const DEFAULT_OPTIONS = {
-  iconSize: [21, 21] as PointTuple,
-  iconAnchor: [11, 11] as PointTuple,
+  iconSize: [23, 23] as PointTuple,
+  iconAnchor: [12, 12] as PointTuple,
   className: "bg-slate-300/[.55] rounded-full",
 };
 
@@ -22,6 +22,8 @@ const iconsCache: [Record<string, Icon>, Record<string, Icon>] = [
     [defaultIcon.src]: new Icon({
       ...DEFAULT_OPTIONS,
       iconUrl: defaultIcon.src,
+      iconSize: [19, 19],
+      iconAnchor: [10, 10],
     }),
   },
   {

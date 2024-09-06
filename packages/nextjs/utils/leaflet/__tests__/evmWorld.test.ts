@@ -1,4 +1,3 @@
-import L, { Coords, Map, Point } from "leaflet";
 import {
   CoordinatesLayer,
   CoordinatesLayerType,
@@ -7,7 +6,8 @@ import {
   ISO_ZOOM,
   MAX_SAFE_COORDINATES,
   MIN_SAFE_COORDINATES,
-} from "~~/utils/leaflet/evmWorld";
+} from "../evmWorld";
+import L, { Coords, Map, Point } from "leaflet";
 
 describe("EvmLonLat projection", () => {
   it.each([
@@ -74,7 +74,7 @@ describe("EVM World Coordinated Reference System (EvmTorus)", () => {
 describe.each(["int", "hex"])("CoordinatesLayer in '%s' mode", mode => {
   let layer: CoordinatesLayerType;
   beforeAll(() => {
-    layer = new CoordinatesLayer(EvmTorus, mode as "int" | "hex");
+    layer = new CoordinatesLayer(EvmTorus, { mode: mode as "int" | "hex", useGrouping: false });
   });
 
   describe("Puts the (0,0) tile as the most northwest one", () => {
@@ -84,12 +84,12 @@ describe.each(["int", "hex"])("CoordinatesLayer in '%s' mode", mode => {
       const tile = layer.createTile(coords as Coords);
 
       if (mode == "int") {
-        expect(tile.childNodes[0].textContent?.replaceAll(" ", "")).toBe("+604462909807314587353088"); // - 2^79
-        expect(tile.childNodes[1].textContent?.replaceAll(" ", "")).toBe("-604462909807314587353088"); // - 2^79
+        expect(tile.childNodes[0].textContent).toBe("+604462909807314587353088"); // - 2^79
+        expect(tile.childNodes[1].textContent).toBe("-604462909807314587353088"); // - 2^79
       } else {
         // hex
-        expect(tile.childNodes[0].textContent?.replaceAll(" ", "")).toBe("Ox80000000000000000000");
-        expect(tile.childNodes[1].textContent?.replaceAll(" ", "")).toBe("Ox80000000000000000000");
+        expect(tile.childNodes[0].textContent).toBe("0x80000000000000000000");
+        expect(tile.childNodes[1].textContent).toBe("0x80000000000000000000");
       }
     });
   });
@@ -102,12 +102,12 @@ describe.each(["int", "hex"])("CoordinatesLayer in '%s' mode", mode => {
       const tile = layer.createTile(coords as Coords);
 
       if (mode == "int") {
-        expect(tile.childNodes[0].textContent?.replaceAll(" ", "")).toBe("+0");
-        expect(tile.childNodes[1].textContent?.replaceAll(" ", "")).toBe("+0");
+        expect(tile.childNodes[0].textContent).toBe("+0");
+        expect(tile.childNodes[1].textContent).toBe("+0");
       } else {
         // hex
-        expect(tile.childNodes[0].textContent?.replaceAll(" ", "")).toBe("Ox00000000000000000000");
-        expect(tile.childNodes[1].textContent?.replaceAll(" ", "")).toBe("Ox00000000000000000000");
+        expect(tile.childNodes[0].textContent).toBe("0x00000000000000000000");
+        expect(tile.childNodes[1].textContent).toBe("0x00000000000000000000");
       }
     });
   });
@@ -132,56 +132,56 @@ describe.each(["int", "hex"])("CoordinatesLayer in '%s' mode", mode => {
         3,
         3,
         3,
-        ["0x20000000000000000000", "0xa0000000000000000000"],
+        ["0x20000000000000000000", "0xe0000000000000000000"],
         [151115727451828646838272n, -151115727451828646838272n],
       ],
       [
         4,
         7,
         7,
-        ["0x10000000000000000000", "0x90000000000000000000"],
+        ["0x10000000000000000000", "0xf0000000000000000000"],
         [75557863725914323419136n, -75557863725914323419136n],
       ],
       [
         5,
         15,
         15,
-        ["0x08000000000000000000", "0x88000000000000000000"],
+        ["0x08000000000000000000", "0xf8000000000000000000"],
         [37778931862957161709568n, -37778931862957161709568n],
       ],
       [
         6,
         31,
         31,
-        ["0x04000000000000000000", "0x84000000000000000000"],
+        ["0x04000000000000000000", "0xfc000000000000000000"],
         [18889465931478580854784n, -18889465931478580854784n],
       ],
       [
         7,
         63,
         63,
-        ["0x02000000000000000000", "0x82000000000000000000"],
+        ["0x02000000000000000000", "0xfe000000000000000000"],
         [9444732965739290427392n, -9444732965739290427392n],
       ],
       [
         8,
         127,
         127,
-        ["0x01000000000000000000", "0x81000000000000000000"],
+        ["0x01000000000000000000", "0xff000000000000000000"],
         [4722366482869645213696n, -4722366482869645213696n],
       ],
       [
         9,
         255,
         255,
-        ["0x00800000000000000000", "0x80800000000000000000"],
+        ["0x00800000000000000000", "0xff800000000000000000"],
         [2361183241434822606848n, -2361183241434822606848n],
       ],
       [
         ISO_ZOOM,
         Math.pow(2, ISO_ZOOM - 1) - 1,
         Math.pow(2, ISO_ZOOM - 1) - 1,
-        ["0x00000000004000000000", "0x80000000004000000000"],
+        ["0x00000000004000000000", "0xffffffffffc000000000"],
         [274877906944n, -274877906944n],
       ], // -2^(30 + 8) 30 downscale + 8 tile
     ])("At zoom %s, shows the tile (%s,%s) ", (z, x, y, hex, int) => {
@@ -190,12 +190,12 @@ describe.each(["int", "hex"])("CoordinatesLayer in '%s' mode", mode => {
       const tile = layer.createTile(coords as Coords);
 
       if (mode == "int") {
-        expect(BigInt(tile.childNodes[0].textContent?.replaceAll(" ", "") as string)).toBe(int[0]);
-        expect(BigInt(tile.childNodes[1].textContent?.replaceAll(" ", "") as string)).toBe(int[1]);
+        expect(BigInt(tile.childNodes[0].textContent as string)).toBe(int[0]);
+        expect(BigInt(tile.childNodes[1].textContent as string)).toBe(int[1]);
       } else {
         // hex
-        expect(tile.childNodes[0].textContent?.replaceAll(" ", "")).toBe(hex[0].replace("0x", "Ox"));
-        expect(tile.childNodes[1].textContent?.replaceAll(" ", "")).toBe(hex[1].replace("0x", "Ox"));
+        expect(tile.childNodes[0].textContent).toBe(hex[0]);
+        expect(tile.childNodes[1].textContent).toBe(hex[1]);
       }
     });
   });
@@ -204,7 +204,7 @@ describe.each(["int", "hex"])("CoordinatesLayer in '%s' mode", mode => {
 describe("CoordinatesLayer utility methods", () => {
   let layer: CoordinatesLayerType;
   beforeAll(() => {
-    layer = new CoordinatesLayer(EvmTorus, "hex");
+    layer = new CoordinatesLayer(EvmTorus);
   });
 
   describe("pixelInTileToLatLng", () => {

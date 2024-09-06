@@ -6,6 +6,7 @@ import type { Coords, LeafletEvent, TileEvent } from "leaflet";
 import CoordinatesLayerComponent from "~~/components/leaflet/CoordinatesLayer";
 import useRetrieveDisplayedObjects from "~~/hooks/10tance/useRetrieveDisplayedObjects";
 import { type tileKey, useGlobalState } from "~~/services/store/store";
+import { CoordinatesFormatterMode } from "~~/utils/leaflet/coordinatesFormatter";
 
 // copied from GridLayer._tileCoordsToKey since the instance created by the map is not easily reachable
 const tileCoordsTokey = (coords: Coords): tileKey => `${coords.x}:${coords.y}:${coords.z}`;
@@ -21,11 +22,12 @@ const COORDINATES_LAYER_CLASSNAMES = {
 async function factory() {
   const { EvmTorus, ISO_ZOOM } = await import("~~/utils/leaflet/evmWorld");
   const getIcon = (await import("~~/utils/leaflet/getIcon")).default;
-  const { Marker, Tooltip, LayersControl, MapContainer, ScaleControl, TileLayer, useMap, useMapEvent } = await import(
-    "react-leaflet"
-  );
+  const { Marker, Tooltip, LayersControl, LayerGroup, MapContainer, ScaleControl, TileLayer, useMap, useMapEvent } =
+    await import("react-leaflet");
 
-  const Map: FunctionComponent = () => {
+  const Map: FunctionComponent<{ onChangeCoordinatesMode: (mode: CoordinatesFormatterMode) => void }> = ({
+    onChangeCoordinatesMode,
+  }) => {
     const addActiveTile = useGlobalState(state => state.addActiveTile);
     const removeActiveTile = useGlobalState(state => state.removeActiveTile);
     const setMapTileLayerInstance = useGlobalState(state => state.setMapTileLayerInstance);
@@ -44,8 +46,9 @@ async function factory() {
     const onLayerAdded = useCallback(
       (event: LeafletEvent) => {
         setMapTileLayerInstance(event.target);
+        onChangeCoordinatesMode(event.target.options.mode);
       },
-      [setMapTileLayerInstance],
+      [setMapTileLayerInstance, onChangeCoordinatesMode],
     );
 
     return (
@@ -66,14 +69,13 @@ async function factory() {
           maxZoom={ISO_ZOOM}
         />
         <LayersControl position="topright">
-          <LayersControl.BaseLayer name="Integer coordinates" checked={false}>
-            <CoordinatesLayerComponent
-              crs={EvmTorus}
-              noWrap={false}
-              mode="int"
-              classNames={COORDINATES_LAYER_CLASSNAMES}
-            />
-          </LayersControl.BaseLayer>
+          <LayersControl.Overlay name="ERC20 Contracts" checked={true}>
+            <LayerGroup>
+              <EvmMarkers />
+            </LayerGroup>
+          </LayersControl.Overlay>
+        </LayersControl>
+        <LayersControl position="topright">
           <LayersControl.BaseLayer name="Hexadecimal coordinates" checked={true}>
             <CoordinatesLayerComponent
               crs={EvmTorus}
@@ -83,10 +85,18 @@ async function factory() {
               eventHandlers={{ add: onLayerAdded }}
             />
           </LayersControl.BaseLayer>
+          <LayersControl.BaseLayer name="Integer coordinates" checked={false}>
+            <CoordinatesLayerComponent
+              crs={EvmTorus}
+              noWrap={false}
+              mode="int"
+              classNames={COORDINATES_LAYER_CLASSNAMES}
+              eventHandlers={{ add: onLayerAdded }}
+            />
+          </LayersControl.BaseLayer>
         </LayersControl>
         <ScaleControl />
         <MoveHandler />
-        <EvmMarkers />
       </MapContainer>
     );
   };
@@ -118,7 +128,6 @@ async function factory() {
     const data = useRetrieveDisplayedObjects();
     const selectedObjectId = useGlobalState(state => state.selectedObject);
     const setSelectedObject = useGlobalState(state => state.setSelectedObject);
-
     const eventHandlers = useMemo(
       () => ({
         click(event: LeafletEvent) {

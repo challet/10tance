@@ -7,19 +7,18 @@ import {
   withPane,
 } from "@react-leaflet/core";
 import type { CRS } from "leaflet";
-import type { CoordinatesLayerMode, CoordinatesLayerOptions, CoordinatesLayerType } from "~~/utils/leaflet/evmWorld";
+import type { CoordinatesLayerOptions, CoordinatesLayerType } from "~~/utils/leaflet/evmWorld";
 
 export interface CoordinatesLayerProps extends CoordinatesLayerOptions, LayerProps {
   crs: CRS;
-  mode: CoordinatesLayerMode;
 }
 
 async function factory() {
   const { CoordinatesLayer: LeafletCoordinatesLayer } = await import("~~/utils/leaflet/evmWorld");
 
   const CoordinatesLayer = createTileLayerComponent<CoordinatesLayerType, CoordinatesLayerProps>(
-    function createTileLayer({ crs, mode, ...options }, context) {
-      const layer = new LeafletCoordinatesLayer(crs, mode, withPane(options, context));
+    function createTileLayer({ crs, ...options }, context) {
+      const layer = new LeafletCoordinatesLayer(crs, withPane(options, context));
       return createElementObject<CoordinatesLayerType>(layer, context);
     },
     function updateTileLayer(layer, props, prevProps) {
