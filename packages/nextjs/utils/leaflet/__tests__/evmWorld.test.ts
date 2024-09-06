@@ -2,11 +2,11 @@ import {
   CoordinatesLayer,
   CoordinatesLayerType,
   EvmLonLat,
-  EvmTorus,
+  EvmTorusCRS,
   ISO_ZOOM,
   MAX_SAFE_COORDINATES,
   MIN_SAFE_COORDINATES,
-} from "../evmWorld";
+} from "common/src/leaflet";
 import L, { Coords, Map, Point } from "leaflet";
 
 describe("EvmLonLat projection", () => {
@@ -24,7 +24,7 @@ describe("EvmLonLat projection", () => {
   });
 });
 
-describe("EVM World Coordinated Reference System (EvmTorus)", () => {
+describe("EVM World Coordinated Reference System (EvmTorusCRS)", () => {
   let map: Map;
 
   beforeAll(() => {
@@ -33,7 +33,7 @@ describe("EVM World Coordinated Reference System (EvmTorus)", () => {
     map = L.map("map", {
       center: [0, 0],
       zoom: 0,
-      crs: EvmTorus,
+      crs: EvmTorusCRS,
     });
   });
 
@@ -74,7 +74,7 @@ describe("EVM World Coordinated Reference System (EvmTorus)", () => {
 describe.each(["int", "hex"])("CoordinatesLayer in '%s' mode", mode => {
   let layer: CoordinatesLayerType;
   beforeAll(() => {
-    layer = new CoordinatesLayer(EvmTorus, { mode: mode as "int" | "hex", useGrouping: false });
+    layer = new CoordinatesLayer(EvmTorusCRS, { mode: mode as "int" | "hex", useGrouping: false });
   });
 
   describe("Puts the (0,0) tile as the most northwest one", () => {
@@ -204,7 +204,7 @@ describe.each(["int", "hex"])("CoordinatesLayer in '%s' mode", mode => {
 describe("CoordinatesLayer utility methods", () => {
   let layer: CoordinatesLayerType;
   beforeAll(() => {
-    layer = new CoordinatesLayer(EvmTorus);
+    layer = new CoordinatesLayer(EvmTorusCRS);
   });
 
   describe("pixelInTileToLatLng", () => {

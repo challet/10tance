@@ -1,8 +1,8 @@
-import coordinateFormatter, { CoordinatesFormatterOptions } from "../coordinatesFormatter";
+import { type CoordinateFormatterOptions, coordinateFormatter } from "common/src/leaflet";
 
 describe("coordinateFormatter helper", () => {
   describe("hex representation", () => {
-    const options: CoordinatesFormatterOptions = { mode: "hex", useGrouping: false };
+    const options: CoordinateFormatterOptions = { mode: "hex", useGrouping: false };
     it.each([
       [0, "00000000000000000000"],
       [1, "00000000000000000001"],

@@ -1,3 +1,5 @@
+"use client";
+
 import { FormEvent, FunctionComponent, useCallback, useEffect, useState } from "react";
 import { AddressInput } from "../scaffold-eth";
 import { useGlobalState } from "~~/services/store/store";
@@ -20,7 +22,7 @@ const GoToUserControl: FunctionComponent<{ className: string }> = ({ className =
       const target = event.target as typeof event.target & {
         address: { value: string };
       };
-      setMapToGoTo((await import("~~/utils/leaflet/evmWorld")).EvmLonLat.fromEvmAddress(target.address.value));
+      setMapToGoTo((await import("common/src/leaflet")).EvmLonLat.fromEvmAddress(target.address.value));
       setSelectedObject(target.address.value);
     },
     [setMapToGoTo, setSelectedObject],

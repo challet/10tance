@@ -2,11 +2,11 @@
 
 import { FunctionComponent, useCallback, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
+import type { CoordinateFormatterMode } from "common/src/leaflet";
 import type { Coords, LeafletEvent, TileEvent } from "leaflet";
-import CoordinatesLayerComponent from "~~/components/leaflet/CoordinatesLayer";
+import CoordinatesLayerComponent from "~~/components/leaflet/CoordinatesLayerComponent";
 import useRetrieveDisplayedObjects from "~~/hooks/10tance/useRetrieveDisplayedObjects";
 import { type tileKey, useGlobalState } from "~~/services/store/store";
-import { CoordinatesFormatterMode } from "~~/utils/leaflet/coordinatesFormatter";
 
 // copied from GridLayer._tileCoordsToKey since the instance created by the map is not easily reachable
 const tileCoordsTokey = (coords: Coords): tileKey => `${coords.x}:${coords.y}:${coords.z}`;
@@ -20,12 +20,12 @@ const COORDINATES_LAYER_CLASSNAMES = {
 };
 
 async function factory() {
-  const { EvmTorus, ISO_ZOOM } = await import("~~/utils/leaflet/evmWorld");
+  const { EvmTorusCRS, ISO_ZOOM } = await import("common/src/leaflet");
   const getIcon = (await import("~~/utils/leaflet/getIcon")).default;
   const { Marker, Tooltip, LayersControl, LayerGroup, MapContainer, ScaleControl, TileLayer, useMap, useMapEvent } =
     await import("react-leaflet");
 
-  const Map: FunctionComponent<{ onChangeCoordinatesMode: (mode: CoordinatesFormatterMode) => void }> = ({
+  const Map: FunctionComponent<{ onChangeCoordinatesMode: (mode: CoordinateFormatterMode) => void }> = ({
     onChangeCoordinatesMode,
   }) => {
     const addActiveTile = useGlobalState(state => state.addActiveTile);
@@ -58,7 +58,7 @@ async function factory() {
         minZoom={0}
         maxZoom={ISO_ZOOM}
         scrollWheelZoom={true}
-        crs={EvmTorus}
+        crs={EvmTorusCRS}
         className="size-full"
       >
         <TileLayer
@@ -78,7 +78,7 @@ async function factory() {
         <LayersControl position="topright">
           <LayersControl.BaseLayer name="Hexadecimal coordinates" checked={true}>
             <CoordinatesLayerComponent
-              crs={EvmTorus}
+              crs={EvmTorusCRS}
               noWrap={false}
               mode="hex"
               classNames={COORDINATES_LAYER_CLASSNAMES}
@@ -87,7 +87,7 @@ async function factory() {
           </LayersControl.BaseLayer>
           <LayersControl.BaseLayer name="Integer coordinates" checked={false}>
             <CoordinatesLayerComponent
-              crs={EvmTorus}
+              crs={EvmTorusCRS}
               noWrap={false}
               mode="int"
               classNames={COORDINATES_LAYER_CLASSNAMES}

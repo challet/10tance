@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import type { CoordinateFormatterMode } from "common/src/leaflet";
 import "leaflet/dist/leaflet.css";
 import type { NextPage } from "next";
 import Map from "~~/components/leaflet/Map";
 import ObjectDetails from "~~/components/web3/ObjectDetails";
 import { useGlobalState } from "~~/services/store/store";
-import type { CoordinatesFormatterMode } from "~~/utils/leaflet/coordinatesFormatter";
 
 const Home: NextPage = () => {
   const selectedObject = useGlobalState(state => state.selectedObject);
@@ -16,7 +16,7 @@ const Home: NextPage = () => {
     setSelectedObject(null);
   }, [setSelectedObject]);
 
-  const [coordinatesMode, setCoordinatesMode] = useState<CoordinatesFormatterMode>("hex");
+  const [coordinatesMode, setCoordinatesMode] = useState<CoordinateFormatterMode>("hex");
 
   return (
     <div className="drawer h-[calc(100vh-4rem)]">

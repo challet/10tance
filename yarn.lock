@@ -34,6 +34,7 @@ __metadata:
     "@types/pg": ^8
     "@vercel/blob": ^0.23.4
     colorthief: ^2.4.0
+    common: "*"
     cors: ^2.8.5
     dotenv: ^16.4.5
     express: ^4.19.2
@@ -2816,6 +2817,7 @@ __metadata:
     autoprefixer: ~10.4.12
     blo: ~1.0.1
     burner-connector: ~0.0.8
+    common: "*"
     daisyui: 4.5.0
     eslint: ~8.24.0
     eslint-config-next: ~14.0.4
@@ -5938,7 +5940,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"common@workspace:packages/common":
+"common@*, common@workspace:packages/common":
   version: 0.0.0-use.local
   resolution: "common@workspace:packages/common"
   dependencies:
