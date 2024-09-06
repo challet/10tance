@@ -1,11 +1,11 @@
-export type CoordinatesFormatterMode = "int" | "hex";
+export type CoordinateFormatterMode = "int" | "hex";
 
-export type CoordinatesFormatterOptions = {
-  mode?: CoordinatesFormatterMode;
+export type CoordinateFormatterOptions = {
+  mode?: CoordinateFormatterMode;
   useGrouping?: boolean;
 };
 
-const coordinateFormatter = (nb: bigint | number, options: CoordinatesFormatterOptions = {}): string => {
+const coordinateFormatter = (nb: bigint | number, options: CoordinateFormatterOptions = {}): string => {
   options = { mode: "hex", useGrouping: true, ...options }; // default values
 
   nb = BigInt(nb);
