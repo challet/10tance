@@ -18,14 +18,6 @@ const coordinateFormatter = (nb: bigint | number, options: CoordinatesFormatterO
     const signed_evm_nb = nb >= 0 ? nb : nb + BigInt("0x100000000000000000000");
     const hex = signed_evm_nb.toString(16).padStart(20, "0");
     return options.useGrouping ? hex.replace(/([0-9a-f]{4}(?!$))/g, "$1 ") : hex;
-
-    return "0x ".concat(
-      signed_evm_nb
-        .toString(16) // hexa display
-        .replace(/^\-?([0-9a-f]+)$/, "$1") // remove the potential "-" at the start
-        .padStart(20, "0") // pad with zeros
-        .replace(/([0-9a-f]{4}(?!$))/g, "$1 "), // display by group of 4
-    );
   }
 };
 

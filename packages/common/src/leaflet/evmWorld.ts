@@ -146,17 +146,17 @@ export const CoordinatesLayer: new (
 ) => CoordinatesLayerType = GridLayer.extend({
   initialize: function (crs: CRS, options: CoordinatesLayerOptions | undefined = {}) {
     this._crs = crs;
+    // default options
+    options = {
+      mode: "hex",
+      useGrouping: true,
+      ...options,
+      classNames: {
+        layer:'', tile: '', latAxis: '', lngAxis: '', ...options.classNames
+      },
+      className: (options.className ?? '') + (options.classNames?.layer ? (' ' + options.classNames.layer) : '')
+    }
 
-    if (options.classNames) {
-      if('layer' in options.classNames) {
-        options.className = options.classNames.layer;
-      }
-    } else {
-      options.classNames = {layer:'', tile: '', latAxis: '', lngAxis: ''};
-    }
-    if (options.mode === undefined ) {
-      options.mode = 'hex'
-    }
     // TODO forced options to be used only with the "VirtualTileLayer" hack
     options = {
       ...options,

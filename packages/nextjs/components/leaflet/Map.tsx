@@ -6,6 +6,7 @@ import type { Coords, LeafletEvent, TileEvent } from "leaflet";
 import CoordinatesLayerComponent from "~~/components/leaflet/CoordinatesLayer";
 import useRetrieveDisplayedObjects from "~~/hooks/10tance/useRetrieveDisplayedObjects";
 import { type tileKey, useGlobalState } from "~~/services/store/store";
+import { CoordinatesFormatterMode } from "~~/utils/leaflet/coordinatesFormatter";
 
 // copied from GridLayer._tileCoordsToKey since the instance created by the map is not easily reachable
 const tileCoordsTokey = (coords: Coords): tileKey => `${coords.x}:${coords.y}:${coords.z}`;
@@ -24,7 +25,9 @@ async function factory() {
   const { Marker, Tooltip, LayersControl, LayerGroup, MapContainer, ScaleControl, TileLayer, useMap, useMapEvent } =
     await import("react-leaflet");
 
-  const Map: FunctionComponent = () => {
+  const Map: FunctionComponent<{ onChangeCoordinatesMode: (mode: CoordinatesFormatterMode) => void }> = ({
+    onChangeCoordinatesMode,
+  }) => {
     const addActiveTile = useGlobalState(state => state.addActiveTile);
     const removeActiveTile = useGlobalState(state => state.removeActiveTile);
     const setMapTileLayerInstance = useGlobalState(state => state.setMapTileLayerInstance);
@@ -43,8 +46,9 @@ async function factory() {
     const onLayerAdded = useCallback(
       (event: LeafletEvent) => {
         setMapTileLayerInstance(event.target);
+        onChangeCoordinatesMode(event.target.options.mode);
       },
-      [setMapTileLayerInstance],
+      [setMapTileLayerInstance, onChangeCoordinatesMode],
     );
 
     return (
@@ -87,6 +91,7 @@ async function factory() {
               noWrap={false}
               mode="int"
               classNames={COORDINATES_LAYER_CLASSNAMES}
+              eventHandlers={{ add: onLayerAdded }}
             />
           </LayersControl.BaseLayer>
         </LayersControl>
@@ -123,7 +128,6 @@ async function factory() {
     const data = useRetrieveDisplayedObjects();
     const selectedObjectId = useGlobalState(state => state.selectedObject);
     const setSelectedObject = useGlobalState(state => state.setSelectedObject);
-
     const eventHandlers = useMemo(
       () => ({
         click(event: LeafletEvent) {
