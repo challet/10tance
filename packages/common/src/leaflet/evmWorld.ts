@@ -14,6 +14,8 @@ import {
   transformation,
 } from "leaflet";
 import type { Coords, GridLayerOptions } from "leaflet";
+import type { CoordinatesFormatterMode, CoordinatesFormatterOptions } from "./coordinatesFormatter";
+import coordinateFormatter from "./coordinatesFormatter";
 
 // The native Javascript min and max integers are respectively -(2^53 – 1) and (2^53 – 1)
 // None map computations should result in over or underflow
@@ -50,8 +52,8 @@ export const EvmLonLat = Util.extend({}, Projection.LonLat, {
     return new LatLng(MAX_SAFE_COORDINATES - point.y, point.x - MAX_SAFE_COORDINATES);
   },
   fromEvmAddress(address: string): LatLng {
-    const [lat, lng] = computeLocation(address.replace("Ox", "0x"));
-    return new LatLng(lat, lng);
+    const [lat, lng] = computeLocation(address.replace("Ox", "0x"), true);
+    return new LatLng(Number(lat), Number(lng));
   },
 });
 
@@ -119,28 +121,6 @@ export const EvmTorus: CRS & {
   },
 );
 
-const intFormat = new Intl.NumberFormat("nu", { useGrouping: true, signDisplay: "always" });
-
-const coordinateFormatter = (nb: number, mode: CoordinatesLayerMode) => {
-  // Upscale to fit the actual EVM resolution
-  const evm_nb = BigInt(nb) * BigInt(Math.pow(2, 30));
-
-  if (mode == "int") {
-    return intFormat.format(evm_nb);
-  } else {
-    // hex
-    // Bigint doesn't natively use signed representation
-    const signed_evm_nb = evm_nb >= 0 ? evm_nb : -evm_nb | BigInt("0x80000000000000000000");
-    return "Ox ".concat(
-      signed_evm_nb
-        .toString(16) // hexa display
-        .replace(/^\-?([0-9a-f]+)$/, "$1") // remove the potential "-" at the start
-        .padStart(20, "0") // pad with zeros
-        .replace(/([0-9a-f]{4})/g, "$1 "), // display by group of 4
-    );
-  }
-};
-
 export type CoordinatesLayerType = GridLayer & {
   createTile: (coords: Coords) => HTMLElement;
   keyToBounds(tile: tileKey): LatLngBounds;
@@ -149,7 +129,6 @@ export type CoordinatesLayerType = GridLayer & {
   pixelInTileToLatLng(tileCoords: Coords, pixel: Point): LatLng;
 };
 export type tileKey = ReturnType<CoordinatesLayerType["_tileCoordsToKey"]>;
-export type CoordinatesLayerMode = "int" | "hex";
 export type CoordinatesLayerOptions = GridLayerOptions & {
   classNames?: {
     layer?: string;
@@ -157,19 +136,26 @@ export type CoordinatesLayerOptions = GridLayerOptions & {
     latAxis?: string;
     lngAxis?: string;
   };
+  mode?: CoordinatesFormatterMode;
+  useGrouping?: boolean;
 };
 
 export const CoordinatesLayer: new (
   crs: CRS,
-  mode: CoordinatesLayerMode,
   options: CoordinatesLayerOptions | void,
 ) => CoordinatesLayerType = GridLayer.extend({
-  initialize: function (crs: CRS, mode: CoordinatesLayerMode, options: CoordinatesLayerOptions | void = {}) {
+  initialize: function (crs: CRS, options: CoordinatesLayerOptions | undefined = {}) {
     this._crs = crs;
-    this._mode = mode;
 
-    if (options?.classNames?.layer) {
-      options.className = options?.classNames?.layer;
+    if (options.classNames) {
+      if('layer' in options.classNames) {
+        options.className = options.classNames.layer;
+      }
+    } else {
+      options.classNames = {layer:'', tile: '', latAxis: '', lngAxis: ''};
+    }
+    if (options.mode === undefined ) {
+      options.mode = 'hex'
     }
     // TODO forced options to be used only with the "VirtualTileLayer" hack
     options = {
@@ -183,19 +169,22 @@ export const CoordinatesLayer: new (
   },
   createTile: function (coords: Coords): HTMLElement {
     // TODO move some css classes up to the pane container
-    const tile = DomUtil.create("div", this.options.classNames.tile);
+    const tile = DomUtil.create("div", this.options?.classNames.tile);
     const size = this.getTileSize();
     // TODO could use this.tileCoordsToBounds instead
     const northwest = this._crs.pointToLatLng(new Point(coords.x * size.x, coords.y * size.y), coords.z);
-
-    DomUtil.create("span", this.options.classNames.latAxis, tile).textContent = coordinateFormatter(
-      northwest.lat,
-      this._mode,
-    );
-    DomUtil.create("span", this.options.classNames.lngAxis, tile).textContent = coordinateFormatter(
-      northwest.lng,
-      this._mode,
-    );
+    
+    const prepend = `${this.options.mode == "hex" ? '0x' : ''}${this.options.mode == "hex" && this.options.useGrouping ? ' ' : ''}`;
+    DomUtil.create("span", this.options?.classNames.latAxis, tile).textContent = prepend
+      + coordinateFormatter(
+        BigInt(northwest.lat) * BigInt(Math.pow(2, 30)), // Upscale to fit the actual EVM resolution
+        { mode: this.options.mode, useGrouping: this.options.useGrouping }
+      );
+    DomUtil.create("span", this.options?.classNames.lngAxis, tile).textContent = prepend
+      + coordinateFormatter(
+        BigInt(northwest.lng) * BigInt(Math.pow(2, 30)), // Upscale to fit the actual EVM resolution
+        { mode: this.options.mode, useGrouping: this.options.useGrouping }
+      );
 
     return tile;
   },
