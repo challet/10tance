@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import type { CoordinateFormatterMode } from "common/src/leaflet";
+import type { CoordinateFormatterMode } from "@10tance/map";
 import "leaflet/dist/leaflet.css";
 import type { NextPage } from "next";
 import Map from "~~/components/leaflet/Map";

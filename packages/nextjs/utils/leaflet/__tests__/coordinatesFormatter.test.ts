@@ -1,4 +1,4 @@
-import { type CoordinateFormatterOptions, coordinateFormatter } from "common/src/leaflet";
+import { type CoordinateFormatterOptions, coordinateFormatter } from "@10tance/map";
 
 describe("coordinateFormatter helper", () => {
   describe("hex representation", () => {

@@ -6,7 +6,7 @@ import {
   ISO_ZOOM,
   MAX_SAFE_COORDINATES,
   MIN_SAFE_COORDINATES,
-} from "common/src/leaflet";
+} from "@10tance/map";
 import L, { Coords, Map, Point } from "leaflet";
 
 describe("EvmLonLat projection", () => {

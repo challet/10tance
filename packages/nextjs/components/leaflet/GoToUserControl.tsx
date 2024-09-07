@@ -22,7 +22,7 @@ const GoToUserControl: FunctionComponent<{ className: string }> = ({ className =
       const target = event.target as typeof event.target & {
         address: { value: string };
       };
-      setMapToGoTo((await import("common/src/leaflet")).EvmLonLat.fromEvmAddress(target.address.value));
+      setMapToGoTo((await import("@10tance/map")).EvmLonLat.fromEvmAddress(target.address.value));
       setSelectedObject(target.address.value);
     },
     [setMapToGoTo, setSelectedObject],

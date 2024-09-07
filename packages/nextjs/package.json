@@ -15,6 +15,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@10tance/map": "*",
     "@heroicons/react": "~2.0.11",
     "@rainbow-me/rainbowkit": "2.1.2",
     "@tanstack/react-query": "~5.28.6",
@@ -22,7 +23,6 @@
     "@uniswap/v2-sdk": "~3.0.1",
     "blo": "~1.0.1",
     "burner-connector": "~0.0.8",
-    "common": "*",
     "daisyui": "4.5.0",
     "leaflet": "^1.9.4",
     "next": "~14.0.4",

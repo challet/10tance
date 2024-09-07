@@ -2,7 +2,7 @@
 
 import { FunctionComponent, useCallback, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
-import type { CoordinateFormatterMode } from "common/src/leaflet";
+import type { CoordinateFormatterMode } from "@10tance/map";
 import type { Coords, LeafletEvent, TileEvent } from "leaflet";
 import CoordinatesLayerComponent from "~~/components/leaflet/CoordinatesLayerComponent";
 import useRetrieveDisplayedObjects from "~~/hooks/10tance/useRetrieveDisplayedObjects";
@@ -20,7 +20,7 @@ const COORDINATES_LAYER_CLASSNAMES = {
 };
 
 async function factory() {
-  const { EvmTorusCRS, ISO_ZOOM } = await import("common/src/leaflet");
+  const { EvmTorusCRS, ISO_ZOOM } = await import("@10tance/map");
   const getIcon = (await import("~~/utils/leaflet/getIcon")).default;
   const { Marker, Tooltip, LayersControl, LayerGroup, MapContainer, ScaleControl, TileLayer, useMap, useMapEvent } =
     await import("react-leaflet");
