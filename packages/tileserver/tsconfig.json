@@ -11,7 +11,9 @@
     "skipLibCheck": true,
     "outDir": "dist",
     "rootDir": "src",
-    "typeRoots": ["./src/types"],
+    "typeRoots": ["src/types"],
+    "incremental": true,
+    "preserveSymlinks": true,
     "paths": {
       "~~/*": ["./*"]
     }

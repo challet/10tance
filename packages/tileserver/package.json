@@ -2,10 +2,11 @@
   "name": "@10tance/tileserver",
   "version": "0.1.0",
   "scripts": {
+    "dev": "tsx src/index.ts",
     "build": "tsc --build --verbose",
-    "serve": "node dist/index.js",
-    "start": "tsx src/index.ts",
-    "vercel": "vercel"
+    "start": "node dist/index.js",
+    "vercel": "vercel",
+    "vercel-build": "yarn workspaces focus @10tance/tileserver ; yarn tiles:build"
   },
   "dependencies": {
     "@10tance/db": "workspace:packages/db",
@@ -34,3 +35,5 @@
     "vercel": "^37.2.1"
   }
 }
+
+
