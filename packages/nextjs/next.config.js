@@ -16,6 +16,8 @@ const nextConfig = {
     config.externals.push("pino-pretty", "lokijs", "encoding");
     return config;
   },
+  // the following doesn't seem to work, see instead package.json "build" script containing "tsc --build" and tsconfig.json "refereences" setting
+  transpilePackages: ['@10tance/map'],
 };
 
 module.exports = nextConfig;

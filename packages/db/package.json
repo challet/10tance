@@ -1,13 +1,14 @@
 {
-  "name": "common",
+  "name": "@10tance/db",
   "version": "0.0.1",
+  "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "packageManager": "yarn@3.2.3",
   "scripts": {
     "build": "tsc --build --verbose"
   },
   "dependencies": {
+    "@10tance/map": "workspace:packages/map",
     "leaflet": "^1.9.4",
     "pg": "^8.12.0",
     "sequelize": "^6.37.3"

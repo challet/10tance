@@ -1,4 +1,4 @@
-export default function computeLocation(address: string, downScale: boolean = true): [bigint, bigint] {
+export default function computeEvmLocation(address: string, downScale: boolean = true): [bigint, bigint] {
   const addr = BigInt(address);
   const size = downScale ? 50 : 80;
   const shift = downScale ? 30 : 0;

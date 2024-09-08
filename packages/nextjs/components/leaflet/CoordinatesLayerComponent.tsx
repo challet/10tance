@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import type { CoordinatesLayerOptions, CoordinatesLayerType } from "@10tance/map";
 import {
   type LayerProps,
   createElementObject,
@@ -7,18 +8,17 @@ import {
   withPane,
 } from "@react-leaflet/core";
 import type { CRS } from "leaflet";
-import type { CoordinatesLayerOptions, CoordinatesLayerType } from "~~/utils/leaflet/evmWorld";
 
-export interface CoordinatesLayerProps extends CoordinatesLayerOptions, LayerProps {
+export interface CoordinatesLayerComponentProps extends CoordinatesLayerOptions, LayerProps {
   crs: CRS;
 }
 
 async function factory() {
-  const { CoordinatesLayer: LeafletCoordinatesLayer } = await import("~~/utils/leaflet/evmWorld");
+  const { CoordinatesLayer } = await import("@10tance/map");
 
-  const CoordinatesLayer = createTileLayerComponent<CoordinatesLayerType, CoordinatesLayerProps>(
+  const CoordinatesLayerComponent = createTileLayerComponent<CoordinatesLayerType, CoordinatesLayerComponentProps>(
     function createTileLayer({ crs, ...options }, context) {
-      const layer = new LeafletCoordinatesLayer(crs, withPane(options, context));
+      const layer = new CoordinatesLayer(crs, withPane(options, context));
       return createElementObject<CoordinatesLayerType>(layer, context);
     },
     function updateTileLayer(layer, props, prevProps) {
@@ -26,7 +26,7 @@ async function factory() {
     },
   );
 
-  return CoordinatesLayer;
+  return CoordinatesLayerComponent;
 }
 
 export default dynamic(factory, { ssr: false });

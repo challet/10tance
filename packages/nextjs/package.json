@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
-    "check-types": "tsc --noEmit --incremental",
+    "build": "tsc --build --verbose ; next build",
+    "check-types": "tsc --build ; tsc --noEmit --incremental",
     "dev": "next dev",
     "format": "prettier --write . '!(node_modules|.next|contracts)/**/*'",
     "lint": "next lint",
@@ -15,6 +15,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@10tance/map": "workspace:packages/map",
     "@heroicons/react": "~2.0.11",
     "@rainbow-me/rainbowkit": "2.1.2",
     "@tanstack/react-query": "~5.28.6",

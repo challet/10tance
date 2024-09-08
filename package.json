@@ -27,24 +27,21 @@
     "next:test": "yarn workspace @se-2/nextjs test",
     "next:vercel": "yarn workspace @se-2/nextjs vercel",
     "next:vercel:yolo": "yarn workspace @se-2/nextjs vercel:yolo",
-    "tiles:start": "yarn workspace @10tance/tileserver start",
+    "tiles:dev": "yarn workspace @10tance/tileserver dev",
     "tiles:build": "yarn workspace @10tance/tileserver build",
-    "tiles:serve": "yarn workspace @10tance/tileserver serve",
+    "tiles:start": "yarn workspace @10tance/tileserver start",
     "tiles:vercel": "yarn workspace @10tance/tileserver vercel",
     "postinstall": "husky install",
     "precommit": "lint-staged",
     "format": "yarn next:format && yarn foundry:format"
   },
   "devDependencies": {
-    "@types/cors": "^2",
     "husky": "~8.0.3",
-    "lint-staged": "~13.2.2"
+    "lint-staged": "~13.2.2",
+    "vercel": "^37.4.0"
   },
   "packageManager": "yarn@3.2.3",
   "engines": {
     "node": ">=18.17.0"
-  },
-  "dependencies": {
-    "cors": "^2.8.5"
   }
 }

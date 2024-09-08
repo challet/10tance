@@ -1,3 +1,4 @@
 {
-  "installCommand": "yarn install"
+  "installCommand": "yarn workspaces focus @se-2/nextjs",
+  "buildCommand": "yarn next:build"
 }

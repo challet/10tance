@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import type { Coords, LatLngBounds, } from "leaflet";
-import { ISO_ZOOM } from "../common/index.js";
+import { ISO_ZOOM } from "@10tance/map";
 
 export type tileData = {
   coords: Coords;
@@ -10,9 +10,9 @@ export type tileData = {
 // can be not aync anymore and dynamic import removed after [this PR](https://github.com/Leaflet/Leaflet/pull/9385) makes it to a release
 const tileBasedMiddlewareFactory = async() => {
   const { Point, LatLng } = await import("leaflet");
-  const { CoordinatesLayer, EvmTorus } = await import("../common/leaflet/evmWorld.js");
+  const { CoordinatesLayer, EvmTorusCRS } = await import("@10tance/map");
   
-  const layer = new CoordinatesLayer(EvmTorus, "hex");
+  const layer = new CoordinatesLayer(EvmTorusCRS, { mode: "hex"});
 
   return (req: Request, res: Response, next: NextFunction) => {
     const params = [

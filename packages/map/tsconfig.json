@@ -4,26 +4,21 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "allowImportingTsExtensions": false,
-    "esModuleInterop": true,
+    "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
     "outDir": "dist",
     "rootDir": "src",
-    "typeRoots": ["src/types"],
-    "incremental": true,
-    "preserveSymlinks": true,
     "paths": {
       "~~/*": ["./*"]
-    }
+    },
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
   },
-  "composite": true,
-  "references": [
-    { "path": "../map" },
-    { "path": "../db" }
-  ],
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules", "dist"]
 }
-

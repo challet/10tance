@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import initDb from '../common/sequelize';
+import { initDb } from '@10tance/db';
 import { Op, type FindAttributeOptions, type ModelCtor  } from "sequelize";
 import { getColor } from "colorthief";
 import File from "../services/files";
-import type { EVMObjectType } from "../common/sequelize/models/EVMObject";
+import type { EVMObjectType } from "@10tance/db";
 import createImage, { type pixelInfluencer } from "../services/image";
 
 const tilesRoute = async (req: Request, res: Response) => {
