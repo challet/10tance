@@ -16,6 +16,12 @@
       "~~/*": ["./*"]
     }
   },
+  "composite": true,
+  "references": [
+    { "path": "../map" },
+    { "path": "../db" }
+  ],
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"],
 }
+

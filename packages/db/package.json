@@ -8,10 +8,13 @@
     "build": "tsc --build --verbose"
   },
   "dependencies": {
+    "@10tance/map": "workspace:packages/map",
+    "leaflet": "^1.9.4",
     "pg": "^8.12.0",
     "sequelize": "^6.37.3"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.12",
     "@types/pg": "^8",
     "typescript": "^5.5.4"
   }

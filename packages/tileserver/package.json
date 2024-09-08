@@ -8,6 +8,8 @@
     "vercel": "vercel"
   },
   "dependencies": {
+    "@10tance/db": "workspace:packages/db",
+    "@10tance/map": "workspace:packages/map",
     "@vercel/blob": "^0.23.4",
     "colorthief": "^2.4.0",
     "cors": "^2.8.5",

@@ -17,9 +17,9 @@ export type pixelInfluencer = {
 // Async could be removed and dynamic import made static after [this PR](https://github.com/Leaflet/Leaflet/pull/9385) makes it to a release
 const createImage = async (tileCoords: Coords, influencers: pixelInfluencer[], MIN_STRENGTH: number): Promise<InstanceType<typeof Jimp>> => {
   const { Point, latLng } = await import("leaflet");
-  const { CoordinatesLayer, EvmTorusCRS } = await import("../common/leaflet/evmWorld.js");
+  const { CoordinatesLayer, EvmTorusCRS } = await import("@10tance/map");
   
-  const layer = new CoordinatesLayer(EvmTorusCRS, "hex");
+  const layer = new CoordinatesLayer(EvmTorusCRS, { mode: "hex"});
   const image = new Jimp({ width: 256, height: 256, color:'#888888ff' });
   
   for(let x = 0; x < 256; x++) {

@@ -130,7 +130,7 @@ const boundsToGeom = (bounds: LatLngBounds): string => {
 
 // Async could be removed and dynamic import made static after [this PR](https://github.com/Leaflet/Leaflet/pull/9385) makes it to a release
 const makeWrappingMultiPolygon = async (originalPolygon: string): Promise<string> => {
-  const { EvmTorusCRS } = await import("../../leaflet/EvmTorusCRS.js");
+  const { EvmTorusCRS } = await import("@10tance/map");
   if (EvmTorusCRS.wrapLngSize === undefined || EvmTorusCRS.wrapLatSize === undefined) {
     return originalPolygon;
   } else {

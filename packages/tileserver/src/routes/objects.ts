@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
-import type { ModelStatic } from "sequelize";
-import initDb from '../common/sequelize';
-import type { EVMObjectType } from "../common/sequelize/models/EVMObject";
+import { initDb } from "@10tance/db";
+import type { EVMObjectType } from "@10tance/db";
 import File from "../services/files";
 
 const objectsRoute = async (req: Request, res: Response) => {
