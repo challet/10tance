@@ -1,0 +1,6 @@
+.github
+docs
+./*.md
+*.tsbuildinfo
+.env
+packages/tileserver/files

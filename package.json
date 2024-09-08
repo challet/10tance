@@ -36,15 +36,12 @@
     "format": "yarn next:format && yarn foundry:format"
   },
   "devDependencies": {
-    "@types/cors": "^2",
     "husky": "~8.0.3",
-    "lint-staged": "~13.2.2"
+    "lint-staged": "~13.2.2",
+    "vercel": "^37.4.0"
   },
   "packageManager": "yarn@3.2.3",
   "engines": {
     "node": ">=18.17.0"
-  },
-  "dependencies": {
-    "cors": "^2.8.5"
   }
 }
