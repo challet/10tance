@@ -9,12 +9,17 @@ import linkIcon from "~~/public/icons/external-link-arrow.svg";
 export const Header = () => {
   const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
   const toggleTooltip = () => {
-    console.log(tooltipOpen, !tooltipOpen);
     setTooltipOpen(!tooltipOpen);
+  };
+  const resetTooltip = () => {
+    setTooltipOpen(false);
   };
 
   return (
-    <div className="sticky lg:static top-0 navbar bg-base-100 flex-shrink-0 justify-between z-20 shadow-md shadow-secondary px-0 sm:px-2 h-16">
+    <div
+      className="sticky lg:static top-0 navbar bg-base-100 flex-shrink-0 justify-between z-20 shadow-md shadow-secondary px-0 sm:px-2 h-16"
+      onMouseLeave={resetTooltip}
+    >
       <div className="navbar-start w-auto lg:w-1/2 text-align-left">
         <Image
           className="aspect-square size-16 p-0 mr-5"
