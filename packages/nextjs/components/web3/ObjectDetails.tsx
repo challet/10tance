@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import type { CoordinateFormatterMode } from "@10tance/map";
 import useRetrieveSelectedObject from "~~/hooks/10tance/useRetrieveSelectedObject";
-import defaultIcon from "~~/public/question-mark-circle.svg";
+import defaultIcon from "~~/public/icons/question-mark-circle.svg";
 
 async function factory() {
   const { computeEvmLocation, coordinateFormatter } = await import("@10tance/map");

@@ -1,80 +1,53 @@
-# 🏗 Scaffold-ETH 2
+# 🍩 10tance
 
-<h4 align="center">
-  <a href="https://docs.scaffoldeth.io">Documentation</a> |
-  <a href="https://scaffoldeth.io">Website</a>
-</h4>
+10tance is a data processor to build virtual worlds from the state of an EVM chain.
 
-🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on the Ethereum blockchain. It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts.
+The core concept is the translation of an 0x address into a predictable location, giving objects (EOA accounts and contracts) a position and subsequently distance between them.
 
-⚙️ Built using NextJS, RainbowKit, Foundry, Wagmi, Viem, and Typescript.
+## An EVM world
 
-- ✅ **Contract Hot Reload**: Your frontend auto-adapts to your smart contract as you edit it.
-- 🪝 **[Custom hooks](https://docs.scaffoldeth.io/hooks/)**: Collection of React hooks wrapper around [wagmi](https://wagmi.sh/) to simplify interactions with smart contracts with typescript autocompletion.
-- 🧱 [**Components**](https://docs.scaffoldeth.io/components/): Collection of common web3 components to quickly build your frontend.
-- 🔥 **Burner Wallet & Local Faucet**: Quickly test your application with a burner wallet and local faucet.
-- 🔐 **Integration with Wallet Providers**: Connect to different wallet providers and interact with the Ethereum network.
+To each chain its own world. They will be displayed on an interactive 2d map.
 
-![Debug Contracts tab](https://github.com/scaffold-eth/scaffold-eth-2/assets/55535804/b237af0c-5027-4849-a5c1-2e31495cccb1)
+If you think the world is flat, I can tell you you are wrong because it is actually a doughnut ! Here they are indeed toruses, east connects with west and north with south :
 
-## Requirements
+* it makes the projection s simple as on flat world
+* there is no edges as on a sphere world
 
-Before you begin, you need to install the following tools:
+Same as with classical interactive maps, it will be composed of several layers fitting into two categories :
 
-- [Node (>= v18.17)](https://nodejs.org/en/download/)
-- Yarn ([v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install))
-- [Git](https://git-scm.com/downloads)
+### Background layers
 
-## Quickstart
+They could be an addresses density map, market value density.
 
-To get started with Scaffold-ETH 2, follow the steps below:
+### Interactive points of interest
 
-1. Install dependencies if it was skipped in CLI:
+Accounts and contracts shown as interactive locations. Searchable from their standard ERC interfaces, their addresses, their links to other objects
 
-```
-cd my-dapp-example
-yarn install
-```
+## Context
 
-2. Run a local network in the first terminal:
+* Started during the ETHGlobal Superhack 2024 event : https://ethglobal.com/showcase/10tance-ggf1f
+* Launched as a demo app on https://10tance.vercel.app/ with ERC20 tokens from the Optimism blockchain
 
-```
-yarn chain
-```
+## Goals
 
-This command starts a local Ethereum network using Foundry. The network runs on your local machine and can be used for testing and development. You can customize the network configuration in `packages/foundry/foundry.toml`.
+Some ideas of what could be build on top of it.
 
-3. On a second terminal, deploy the test contract:
+On the serious side of data visualization :
 
-```
-yarn deploy
-```
+* display metrics in a visual way
+* materialize links between contracts : liquidity pools with their tokens, tokens with their holders etc.
+* crowd curated directory of contracts
 
-This command deploys a test smart contract to the local network. The contract is located in `packages/foundry/contracts` and can be modified to suit your needs. The `yarn deploy` command uses the deploy script located in `packages/foundry/script` to deploy the contract to the network. You can also customize the deploy script.
+On the fun side of gamification :
 
-4. On a third terminal, start your NextJS app:
-
-```
-yarn start
-```
-
-Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the `Debug Contracts` page. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
-
-Run smart contract test with `yarn foundry:test`
-
-- Edit your smart contract `YourContract.sol` in `packages/foundry/contracts`
-- Edit your frontend homepage at `packages/nextjs/app/page.tsx`. For guidance on [routing](https://nextjs.org/docs/app/building-your-application/routing/defining-routes) and configuring [pages/layouts](https://nextjs.org/docs/app/building-your-application/routing/pages-and-layouts) checkout the Next.js documentation.
-- Edit your deployment scripts in `packages/foundry/script`
+* related to the data directory of contracts : a world discovery game where users navigate the map and explore contracts, describing and auditing or incentivize others to do it
+* a game to own the closest possible NFT to a sponsor contract
+* a game where holding an NFT would spread sovereignty over an area around. Leading to conflict and alliances
 
 
-## Documentation
 
-Visit our [docs](https://docs.scaffoldeth.io) to learn how to start building with Scaffold-ETH 2.
+## How it works 
 
-To know more about its features, check out our [website](https://scaffoldeth.io).
-
-## Contributing to Scaffold-ETH 2
-
-We welcome contributions to Scaffold-ETH 2!
-
-Please see [CONTRIBUTING.MD](https://github.com/scaffold-eth/scaffold-eth-2/blob/main/CONTRIBUTING.md) for more information and guidelines for contributing to Scaffold-ETH 2.
+* An [indexer](/packages/indexer/) to get data from the Blockscout API and to compute the virual locations
+* A [NextJS application](/packages/nextjs) to display the map
+* A [tiles and API backend](/packages/tileserver) to generate the map background images and retrieve objects to display them on top
