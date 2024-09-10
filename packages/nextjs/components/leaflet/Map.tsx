@@ -16,7 +16,7 @@ const COORDINATES_LAYER_CLASSNAMES = {
   layer: "text-slate-400/80 text-center text-[0.7em]/[1.2em] tabular-nums font-mono select-none",
   tile: "border-t border-l border-slate-400/50",
   latAxis: "absolute inset-x-0 top-0",
-  lngAxis: "absolute inset-y-0 left-0 [writing-mode:sideways-lr]",
+  lngAxis: "absolute inset-y-0 left-0 [writing-mode:vertical-lr] rotate-180",
 };
 
 async function factory() {
