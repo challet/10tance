@@ -17,18 +17,18 @@ export const Header = () => {
 
   return (
     <div
-      className="sticky lg:static top-0 navbar bg-base-100 flex-shrink-0 justify-between z-20 shadow-md shadow-secondary px-0 sm:px-2 h-16"
+      className="navbar bg-base-100 p-0 flex-wrap items-center justify-around lg:justify-between shadow-md shadow-secondary"
       onMouseLeave={resetTooltip}
     >
-      <div className="navbar-start w-auto lg:w-1/2 text-align-left">
+      <div className="navbar-start justify-center lg:justify-start w-1/2 lg:w-auto order-1">
         <Image
-          className="aspect-square size-16 p-0 mr-5"
+          className="aspect-square size-16 p-0 ml-2"
           src="/logo.svg"
           alt="10 tance donut logo"
           width={64}
           height={64}
         />
-        <h1 className="inline-block align-middle m-0 font-medium h-full leading-[4rem] text-xl">10 Tance</h1>
+        <h1 className="inline-block align-middle m-0 ml-5 font-medium h-full leading-[4rem] text-2xl">10tance</h1>
         <div className="inline-block relative">
           <button className="btn btn-circle btn-outline m-3 size-4 min-h-4 text-xs leading-3" onClick={toggleTooltip}>
             ?
@@ -61,12 +61,12 @@ export const Header = () => {
           </div>
         </div>
       </div>
-      <div className="navbar-center align-middle font-light h-full leading-[4rem] text-xl">
+      <div className="navbar-center inline-block text-center font-light h-full leading-[4rem] text-xl  w-full lg:w-auto order-3 lg:order-2">
         <span>
           showing <em>ERC20</em> objects from the <em>Optimism</em> chain
         </span>
       </div>
-      <GoToUserControl className="navabar-end w-auto lg:w-1/2 justify-end" />
+      <GoToUserControl className="navabar-end pr-2 justify-center lg:justify-end w-1/2 lg:w-auto order-2 lg:order-3" />
     </div>
   );
 };
