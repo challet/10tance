@@ -19,7 +19,7 @@ const Home: NextPage = () => {
   const [coordinatesMode, setCoordinatesMode] = useState<CoordinateFormatterMode>("hex");
 
   return (
-    <div className="drawer h-[calc(100vh-4rem)]">
+    <div className="drawer h-full">
       <input id="my-drawer" type="checkbox" className="drawer-toggle" checked={selectedObject != null} readOnly />
       <div className="drawer-content  z-0">
         <Map onChangeCoordinatesMode={setCoordinatesMode} />

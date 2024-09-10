@@ -10,14 +10,14 @@ To each chain its own world. They will be displayed on an interactive 2d map.
 
 If you think the world is flat, I can tell you you are wrong because it is actually a doughnut ! Here they are indeed toruses, east connects with west and north with south :
 
-* it makes the projection s simple as on flat world
-* there is no edges as on a sphere world
+* it makes the projection as simple as on flat world
+* there is no edges like on a sphere world
 
 Same as with classical interactive maps, it will be composed of several layers fitting into two categories :
 
 ### Background layers
 
-They could be an addresses density map, market value density.
+They could be an addresses density map, market value density. Or a procedurally generated landscape with the actual objects as seeds.
 
 ### Interactive points of interest
 
@@ -43,8 +43,6 @@ On the fun side of gamification :
 * related to the data directory of contracts : a world discovery game where users navigate the map and explore contracts, describing and auditing or incentivize others to do it
 * a game to own the closest possible NFT to a sponsor contract
 * a game where holding an NFT would spread sovereignty over an area around. Leading to conflict and alliances
-
-
 
 ## How it works 
 
