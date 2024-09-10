@@ -17,7 +17,7 @@ export const Header = () => {
 
   return (
     <div
-      className="navbar bg-base-100 p-0 flex-wrap items-center justify-around lg:justify-between shadow-md shadow-secondary"
+      className="navbar bg-base-100 p-0 flex-wrap items-center justify-around lg:justify-between shadow-md shadow-secondary h-full"
       onMouseLeave={resetTooltip}
     >
       <div className="navbar-start justify-center lg:justify-start w-1/2 lg:w-auto order-1">
@@ -61,7 +61,7 @@ export const Header = () => {
           </div>
         </div>
       </div>
-      <div className="navbar-center inline-block text-center font-light h-full leading-[4rem] text-xl  w-full lg:w-auto order-3 lg:order-2">
+      <div className="navbar-center inline-block text-center font-light leading-initial lg:leading-[4rem] text-xl  w-full lg:w-auto order-3 lg:order-2">
         <span>
           showing <em>ERC20</em> objects from the <em>Optimism</em> chain
         </span>
