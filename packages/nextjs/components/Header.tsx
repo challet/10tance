@@ -20,17 +20,17 @@ export const Header = () => {
       className="navbar bg-base-100 p-0 flex-wrap items-center justify-around lg:justify-between shadow-md shadow-secondary h-full"
       onMouseLeave={resetTooltip}
     >
-      <div className="navbar-start justify-center lg:justify-start w-1/2 lg:w-auto order-1">
+      <div className="navbar-start justify-around lg:justify-start max-w-[50%] w-auto order-1">
         <Image
-          className="aspect-square size-16 p-0 ml-2"
+          className="aspect-square size-16 p-0 hidden xs:[display:initial] ml-2 "
           src="/logo.svg"
           alt="10 tance donut logo"
           width={64}
           height={64}
         />
-        <h1 className="inline-block align-middle m-0 ml-5 font-medium h-full leading-[4rem] text-2xl">10tance</h1>
-        <div className="inline-block relative">
-          <button className="btn btn-circle btn-outline m-3 size-4 min-h-4 text-xs leading-3" onClick={toggleTooltip}>
+        <h1 className="inline-block align-middle m-0 font-medium h-full leading-[4rem] text-2xl ml-3">10tance</h1>
+        <div className="inline-block relative ml-3">
+          <button className="btn btn-circle btn-outline size-4 min-h-4 text-xs leading-3" onClick={toggleTooltip}>
             ?
           </button>
           <div
@@ -61,12 +61,12 @@ export const Header = () => {
           </div>
         </div>
       </div>
-      <div className="navbar-center inline-block text-center font-light leading-initial lg:leading-[4rem] text-xl  w-full lg:w-auto order-3 lg:order-2">
+      <div className="navbar-center inline-block text-center font-light leading-initial lg:leading-[4rem] text-xl w-full lg:w-auto order-3 lg:order-2">
         <span>
           showing <em>ERC20</em> objects from the <em>Optimism</em> chain
         </span>
       </div>
-      <GoToUserControl className="navabar-end pr-2 justify-center lg:justify-end w-1/2 lg:w-auto order-2 lg:order-3" />
+      <GoToUserControl className="navabar-end justify-center lg:justify-end max-w-[50%] order-2 lg:order-3" />
     </div>
   );
 };
