@@ -30,7 +30,7 @@ const GoToUserControl: FunctionComponent<{ className: string }> = ({ className =
   return (
     <form onSubmit={handleGoToAction} className={className}>
       <AddressInput placeholder="Go to address" name="address" value={localGoTo} onChange={setLocalGoTo} />
-      <button className="btn btn-sm h-4">Go</button>
+      <button className="btn btn-sm h-4 mx-1">Go</button>
     </form>
   );
 };
