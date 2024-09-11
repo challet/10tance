@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import express, { Express, Request } from "express";
+import express, { Express } from "express";
 import cors from "cors";
 
 import {tilesRoute, objectsRoute, tileBasedMiddlewareFactory} from './routes';
@@ -7,7 +7,12 @@ import {tilesRoute, objectsRoute, tileBasedMiddlewareFactory} from './routes';
 const app: Express = express();
 const port = process.env.PORT || 3001;
 
-app.use(cors());
+const ALLOWED_ORIGIN = (process.env.CORS_ORIGIN) ? new RegExp(process.env.CORS_ORIGIN) : false;
+
+app.use(cors({
+  origin: ALLOWED_ORIGIN,
+  methods: "GET,HEAD,OPTIONS"
+}));
 
 const promise_app = tileBasedMiddlewareFactory()
   .then((tileBasedMiddleware) => {
@@ -23,6 +28,5 @@ const promise_app = tileBasedMiddlewareFactory()
 process.on("exit", () => {
   // TODO close db;
 })
-
 
 module.exports = promise_app;
