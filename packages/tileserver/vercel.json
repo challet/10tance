@@ -4,6 +4,18 @@
     { "src": "src/index.ts", "use": "@vercel/node" }
   ],
   "routes": [
-    { "src": "/(.*)", "dest": "src/index.ts" }
+    { 
+      "src": "/(.*)",
+      "dest": "src/index.ts",
+      "methods": ["GET", "OPTIONS", "HEAD"],
+      "headers": {
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Methods": "GET,OPTIONS,HEAD",
+        "Access-Control-Allow-Headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Origin",
+        "Cache-Control": "public, max-age=3600, s-maxage=86400, immutable",
+        "CDN-Cache-Control": "public, s-maxage=86400",
+        "Vercel-CDN-Cache-Control": "public, s-maxage=86400"
+      }
+    }
   ]
 }
