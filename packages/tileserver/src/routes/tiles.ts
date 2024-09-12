@@ -1,10 +1,9 @@
 import { Request, Response } from "express";
 import { initDb } from '@10tance/db';
-import { Op, type FindAttributeOptions, type ModelCtor  } from "sequelize";
-import { getColor } from "colorthief";
 import File from "../services/files";
 import type { EVMObjectType } from "@10tance/db";
 import createImage, { type pixelInfluencer } from "../services/image";
+import { getColor } from "@janishutz/colorthief";
 
 const tilesRoute = async (req: Request, res: Response) => {
   const { x, y, z } = res.locals.tile.coords;
@@ -29,9 +28,12 @@ const tilesRoute = async (req: Request, res: Response) => {
       let color;
       // TODO color pickcing could be done once and stored in the db
       try {
-        color = await getColor(d.meta.icon_url!);
+        const imageFetch = await fetch(d.meta.icon_url!);
+        const imageBuffer = await imageFetch.arrayBuffer();
+        color = await getColor(imageBuffer);
       } catch(e) {
         // can happen for "webp" images not supported by node-pixels
+        console.error(e);
         color = null;
       }
       return {

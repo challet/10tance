@@ -11,8 +11,8 @@
   "dependencies": {
     "@10tance/db": "workspace:packages/db",
     "@10tance/map": "workspace:packages/map",
+    "@janishutz/colorthief": "^3.0.1",
     "@vercel/blob": "^0.23.4",
-    "colorthief": "^2.4.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.20.0",
